@@ -2,12 +2,15 @@ import { useState } from 'react';
 import './App.css';
 import BikeFitAnalysis from './components/BikeFitAnalysis';
 import RunningFormAnalysis from './components/RunningFormAnalysis';
+import { detectSportType } from './utils/sportDetection';
 
 function App() {
   const [video, setVideo] = useState(null);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState('');
   const [analysisType, setAnalysisType] = useState(null); // 'bike' or 'running'
+  const [detectedSport, setDetectedSport] = useState(null); // 'cycling', 'running', or 'unknown'
+  const [isDetectingSport, setIsDetectingSport] = useState(false);
 
   const validateVideo = (file) => {
     // Check if file is a video
@@ -51,6 +54,7 @@ function App() {
     setError('');
     setPreview('');
     setAnalysisType(null);
+    setDetectedSport(null);
 
     if (!file) {
       setVideo(null);
@@ -71,10 +75,17 @@ function App() {
       await checkVideoDuration(file);
       setVideo(file);
       setPreview(URL.createObjectURL(file));
+
+      // Detect sport type
+      setIsDetectingSport(true);
+      const sport = await detectSportType(file);
+      setDetectedSport(sport);
+      setIsDetectingSport(false);
     } catch (err) {
       setError(err);
       setVideo(null);
       e.target.value = '';
+      setIsDetectingSport(false);
     }
   };
 
@@ -129,15 +140,36 @@ function App() {
 
           {error && <div className="error">{error}</div>}
 
-          {video && !analysisType && (
-            <div className="analysis-buttons">
-              <button type="button" onClick={handleBikeAnalysis} className="analyze-btn bike-btn">
-                Analyze Bike Fit
-              </button>
-              <button type="button" onClick={handleRunningAnalysis} className="analyze-btn running-btn">
-                Analyze Running Form
-              </button>
+          {isDetectingSport && (
+            <div className="detecting-sport">
+              <div className="small-loader"></div>
+              <p>Detecting sport type...</p>
             </div>
+          )}
+
+          {video && !analysisType && !isDetectingSport && (
+            <>
+              {detectedSport && detectedSport !== 'unknown' && (
+                <div className="sport-detected">
+                  <p>
+                    Detected: <strong>{detectedSport === 'cycling' ? 'Cycling' : 'Running'}</strong>
+                  </p>
+                </div>
+              )}
+
+              <div className="analysis-buttons">
+                {(detectedSport === 'cycling' || detectedSport === 'unknown') && (
+                  <button type="button" onClick={handleBikeAnalysis} className="analyze-btn bike-btn">
+                    Analyze Bike Fit
+                  </button>
+                )}
+                {(detectedSport === 'running' || detectedSport === 'unknown') && (
+                  <button type="button" onClick={handleRunningAnalysis} className="analyze-btn running-btn">
+                    Analyze Running Form
+                  </button>
+                )}
+              </div>
+            </>
           )}
 
           {analysisType === 'bike' && <BikeFitAnalysis videoFile={video} />}

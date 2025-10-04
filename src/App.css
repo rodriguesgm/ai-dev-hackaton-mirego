@@ -136,6 +136,53 @@ h1 {
   box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
 }
 
+.detecting-sport {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.small-loader {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.detecting-sport p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.sport-detected {
+  background: #e8f5e9;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 15px;
+  border-left: 4px solid #4caf50;
+}
+
+.sport-detected p {
+  margin: 0;
+  color: #2e7d32;
+  font-size: 0.95rem;
+}
+
+.sport-detected strong {
+  color: #1b5e20;
+}
+
 .coming-soon {
   background: #f8f9fa;
   padding: 40px;
