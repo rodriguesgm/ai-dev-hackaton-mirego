@@ -1,3 +1,18 @@
+TL;DR;
+
+- Claude create the project from scratch.
+- Suggested different approachs as solution for the project purpose, given details on which one
+- Some features were not working at first, need a couple of rounds to get it right
+- Projet was generated in JS and Claude converted it to TS
+- No test was generated first. When asked, just a few were created.
+    When asked to improve tests until code coverage was at least 80%, it generated but a lot was failing
+    When asked to fix them, the fix was to remove the tests
+
+ 
+
+
+
+Detailed
 
 
 - Created an app from scratch 
@@ -19,47 +34,49 @@
     - After 2 rounds of trying to fix it fixed
         - Although the code generated was funny
 - Asked on how we could improve results and reports
+    1. Visual Enhancements
 
- 1. Visual Enhancements
+    - Skeleton overlay on video - Draw pose keypoints and connections on the video frame
+    - Angle visualization - Show angle measurements directly on the body
+    - Side-by-side comparison - Before/after or left/right leg comparison
+    - Progress indicators - Visual gauges showing how close to optimal ranges
 
-  - Skeleton overlay on video - Draw pose keypoints and connections on the video frame
-  - Angle visualization - Show angle measurements directly on the body
-  - Side-by-side comparison - Before/after or left/right leg comparison
-  - Progress indicators - Visual gauges showing how close to optimal ranges
+    2. Detailed Metrics
 
-  2. Detailed Metrics
+    - Min/Max/Average angles - Show range across all analyzed frames
+    - Frame-by-frame breakdown - Chart showing angle changes over time
+    - Consistency score - How stable the form is throughout the video
+    - Left vs Right comparison - Detect asymmetries in running/cycling
 
-  - Min/Max/Average angles - Show range across all analyzed frames
-  - Frame-by-frame breakdown - Chart showing angle changes over time
-  - Consistency score - How stable the form is throughout the video
-  - Left vs Right comparison - Detect asymmetries in running/cycling
+    3. Better Recommendations
 
-  3. Better Recommendations
+    - Prioritized action items - Rank recommendations by importance
+    - Drill suggestions - Specific exercises to improve weak areas
+    - Video timestamps - Link issues to specific moments in the video
+    - Severity levels - Critical/Warning/Info with color coding (already have this)
 
-  - Prioritized action items - Rank recommendations by importance
-  - Drill suggestions - Specific exercises to improve weak areas
-  - Video timestamps - Link issues to specific moments in the video
-  - Severity levels - Critical/Warning/Info with color coding (already have this)
+    4. Export/Share Features (skipped)
 
-  4. Export/Share Features (skipped)
+    - Download PDF report - Professional formatted analysis
+    - Share link - Generate shareable URL
+    - Compare multiple videos - Track progress over time
+    - Screenshot with annotations - Save marked-up frame
 
-  - Download PDF report - Professional formatted analysis
-  - Share link - Generate shareable URL
-  - Compare multiple videos - Track progress over time
-  - Screenshot with annotations - Save marked-up frame
+    5. Enhanced Data
 
-  5. Enhanced Data
+    - Cadence detection - Steps/pedal RPM per minute
+    - Power zones estimation - Based on body position
+    - Injury risk assessment - Highlight dangerous patterns
+    - Optimal range indicators - Show target zones with color bands
 
-  - Cadence detection - Steps/pedal RPM per minute
-  - Power zones estimation - Based on body position
-  - Injury risk assessment - Highlight dangerous patterns
-  - Optimal range indicators - Show target zones with color bands
+    6. Interactive Features
 
-  6. Interactive Features
+    - Scrub through video - See angles change as you move slider
+    - Toggle overlays - Show/hide different metrics
+    - Video playback with highlights - Play video with issues marked
+    - 3D pose visualization - Rotate view of detected pose
 
-  - Scrub through video - See angles change as you move slider
-  - Toggle overlays - Show/hide different metrics
-  - Video playback with highlights - Play video with issues marked
-  - 3D pose visualization - Rotate view of detected pose
-
-
+- Asked to convert project to TS
+- Asked to generate test and add code coverage
+    - first generated just some times
+    - asked to keep generating until code coverage is at least 80%
