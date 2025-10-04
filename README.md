@@ -4,6 +4,12 @@
 
 This is a video upload and analysis application that allows users to record or upload videos for posture and movement analysis. The app was **completely generated with Claude AI** just for fun and experimentation.
 
+### Demo
+
+[Watch Demo Video](./demo.mov)
+
+> **Note:** The video used for the demo analyses was sourced from YouTube as a publicly available video. The analysis results shown are for demonstration purposes only and may not be accurate, as they have not been validated by health professionals. This demo serves solely as an example of how the application performs.
+
 **⚠️ IMPORTANT DISCLAIMER:** This application has NOT been validated by health professionals. It is a proof-of-concept project and should NOT be used for actual medical or health assessments.
 
 ## How to Run
