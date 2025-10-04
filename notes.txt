@@ -7,7 +7,8 @@ TL;DR;
 - No test was generated first. When asked, just a few were created.
     When asked to improve tests until code coverage was at least 80%, it generated but a lot was failing
     When asked to fix them, the fix was to remove the tests
-
+- Added new enhancements but just not integrated in the code/pages
+    can easily get lost and be confused in the code
  
 
 
