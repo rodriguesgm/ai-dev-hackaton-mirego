@@ -1,5 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, RefObject } from 'react';
 import './InteractiveVideo.css';
+import type { IssueMarker } from '../types';
+
+interface InteractiveVideoProps {
+  videoFile: File;
+  onFrameChange?: (currentTime: number, showSkeleton: boolean, showAngles: boolean) => void | Promise<void>;
+  issueMarkers?: IssueMarker[];
+  showSkeleton?: boolean;
+  showAngles?: boolean;
+  canvasRef?: RefObject<HTMLCanvasElement>;
+  videoRef?: RefObject<HTMLVideoElement>;
+}
 
 /**
  * Interactive Video Player
@@ -15,15 +26,15 @@ function InteractiveVideo({
   showAngles = true,
   canvasRef,
   videoRef: externalVideoRef,
-}) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [showSkeletonOverlay, setShowSkeletonOverlay] = useState(showSkeleton);
-  const [showAngleOverlay, setShowAngleOverlay] = useState(showAngles);
-  const internalVideoRef = useRef(null);
+}: InteractiveVideoProps) {
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const [showSkeletonOverlay, setShowSkeletonOverlay] = useState<boolean>(showSkeleton);
+  const [showAngleOverlay, setShowAngleOverlay] = useState<boolean>(showAngles);
+  const internalVideoRef = useRef<HTMLVideoElement>(null);
   const videoRef = externalVideoRef || internalVideoRef;
-  const timelineRef = useRef(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (videoFile && videoRef.current) {
@@ -98,7 +109,7 @@ function InteractiveVideo({
   useEffect(() => {
     if (!isPlaying || !videoRef.current || !canvasRef) return;
 
-    let animationFrameId;
+    let animationFrameId: number;
 
     const renderFrame = () => {
       if (onFrameChange && videoRef.current) {
@@ -123,7 +134,7 @@ function InteractiveVideo({
     }
   }, [showSkeletonOverlay, showAngleOverlay]);
 
-  const togglePlayPause = async () => {
+  const togglePlayPause = async (): Promise<void> => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -138,7 +149,7 @@ function InteractiveVideo({
     }
   };
 
-  const handleSeek = (e) => {
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>): void => {
     const video = videoRef.current;
     const timeline = timelineRef.current;
     if (!video || !timeline) return;
@@ -152,26 +163,26 @@ function InteractiveVideo({
     setCurrentTime(newTime);
   };
 
-  const skipBackward = () => {
+  const skipBackward = (): void => {
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = Math.max(0, video.currentTime - 2);
   };
 
-  const skipForward = () => {
+  const skipForward = (): void => {
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = Math.min(duration, video.currentTime + 2);
   };
 
-  const jumpToIssue = (time) => {
+  const jumpToIssue = (time: number): void => {
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = time;
     setCurrentTime(time);
   };
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -202,14 +213,14 @@ function InteractiveVideo({
             onClick={() => setShowSkeletonOverlay(!showSkeletonOverlay)}
             title="Toggle skeleton overlay"
           >
-            🦴 Skeleton
+            Skeleton
           </button>
           <button
             className={`toggle-btn ${showAngleOverlay ? 'active' : ''}`}
             onClick={() => setShowAngleOverlay(!showAngleOverlay)}
             title="Toggle angle measurements"
           >
-            📐 Angles
+            Angles
           </button>
         </div>
       </div>
@@ -218,13 +229,13 @@ function InteractiveVideo({
       <div className="video-controls">
         <div className="control-buttons">
           <button onClick={skipBackward} className="control-btn" title="Back 2s">
-            ⏮
+            Back
           </button>
           <button onClick={togglePlayPause} className="control-btn play-btn">
-            {isPlaying ? '⏸' : '▶'}
+            {isPlaying ? 'Pause' : 'Play'}
           </button>
           <button onClick={skipForward} className="control-btn" title="Forward 2s">
-            ⏭
+            Forward
           </button>
           <span className="time-display">
             {formatTime(currentTime)} / {formatTime(duration)}

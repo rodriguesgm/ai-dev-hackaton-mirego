@@ -1,18 +1,21 @@
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 import './App.css';
 import BikeFitAnalysis from './components/BikeFitAnalysis';
 import RunningFormAnalysis from './components/RunningFormAnalysis';
 import { detectSportType } from './utils/sportDetection';
+import type { SportType } from './types';
 
-function App() {
-  const [video, setVideo] = useState(null);
-  const [error, setError] = useState('');
-  const [preview, setPreview] = useState('');
-  const [analysisType, setAnalysisType] = useState(null); // 'bike' or 'running'
-  const [detectedSport, setDetectedSport] = useState(null); // 'cycling', 'running', or 'unknown'
-  const [isDetectingSport, setIsDetectingSport] = useState(false);
+type AnalysisType = 'bike' | 'running' | null;
 
-  const validateVideo = (file) => {
+function App(): JSX.Element {
+  const [video, setVideo] = useState<File | null>(null);
+  const [error, setError] = useState<string>('');
+  const [preview, setPreview] = useState<string>('');
+  const [analysisType, setAnalysisType] = useState<AnalysisType>(null);
+  const [detectedSport, setDetectedSport] = useState<SportType | 'unknown' | null>(null);
+  const [isDetectingSport, setIsDetectingSport] = useState<boolean>(false);
+
+  const validateVideo = (file: File): string | null => {
     // Check if file is a video
     if (!file.type.startsWith('video/')) {
       return 'Please select a valid video file';
@@ -27,7 +30,7 @@ function App() {
     return null;
   };
 
-  const checkVideoDuration = (file) => {
+  const checkVideoDuration = (file: File): Promise<void> => {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
       video.preload = 'metadata';
@@ -49,8 +52,8 @@ function App() {
     });
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.[0];
     setError('');
     setPreview('');
     setAnalysisType(null);
@@ -82,14 +85,14 @@ function App() {
       setDetectedSport(sport);
       setIsDetectingSport(false);
     } catch (err) {
-      setError(err);
+      setError(err as string);
       setVideo(null);
       e.target.value = '';
       setIsDetectingSport(false);
     }
   };
 
-  const handleBikeAnalysis = () => {
+  const handleBikeAnalysis = (): void => {
     if (!video) {
       setError('Please select a video file');
       return;
@@ -97,7 +100,7 @@ function App() {
     setAnalysisType('bike');
   };
 
-  const handleRunningAnalysis = () => {
+  const handleRunningAnalysis = (): void => {
     if (!video) {
       setError('Please select a video file');
       return;
@@ -172,9 +175,9 @@ function App() {
             </>
           )}
 
-          {analysisType === 'bike' && <BikeFitAnalysis videoFile={video} />}
+          {analysisType === 'bike' && video && <BikeFitAnalysis videoFile={video} />}
 
-          {analysisType === 'running' && <RunningFormAnalysis videoFile={video} />}
+          {analysisType === 'running' && video && <RunningFormAnalysis videoFile={video} />}
         </div>
       </div>
     </div>

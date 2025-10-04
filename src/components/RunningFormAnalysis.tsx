@@ -7,23 +7,43 @@ import { enhanceRunningRecommendations, getSeverityDisplay } from '../utils/enha
 import DetailedMetrics from './DetailedMetrics';
 import InteractiveVideo from './InteractiveVideo';
 import './RunningFormAnalysis.css';
+import type {
+  RunningFormAnalysis as RunningFormAnalysisType,
+  Pose,
+  AngleGauge,
+  DetailedMetrics as DetailedMetricsType,
+  Asymmetry,
+  FrameData,
+  Recommendation,
+  IssueMarker,
+  FrameAnalysis
+} from '../types';
 
-function RunningFormAnalysis({ videoFile }) {
-  const [analysis, setAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState('');
-  const [lastPose, setLastPose] = useState(null);
-  const [angleGauges, setAngleGauges] = useState([]);
-  const [detailedMetrics, setDetailedMetrics] = useState(null);
-  const [asymmetry, setAsymmetry] = useState(null);
-  const [frameData, setFrameData] = useState([]);
-  const [enhancedRecs, setEnhancedRecs] = useState([]);
-  const [issueMarkers, setIssueMarkers] = useState([]);
-  const [allFramePoses, setAllFramePoses] = useState([]);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const interactiveCanvasRef = useRef(null);
+interface RunningFormAnalysisProps {
+  videoFile: File;
+}
+
+interface OverallMessage {
+  text: string;
+  color: string;
+}
+
+function RunningFormAnalysis({ videoFile }: RunningFormAnalysisProps) {
+  const [analysis, setAnalysis] = useState<RunningFormAnalysisType | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
+  const [error, setError] = useState<string>('');
+  const [lastPose, setLastPose] = useState<Pose | null>(null);
+  const [angleGauges, setAngleGauges] = useState<AngleGauge[]>([]);
+  const [detailedMetrics, setDetailedMetrics] = useState<DetailedMetricsType | null>(null);
+  const [asymmetry, setAsymmetry] = useState<Asymmetry | null>(null);
+  const [frameData, setFrameData] = useState<FrameData[]>([]);
+  const [enhancedRecs, setEnhancedRecs] = useState<Recommendation[]>([]);
+  const [issueMarkers, setIssueMarkers] = useState<IssueMarker[]>([]);
+  const [allFramePoses, setAllFramePoses] = useState<FrameAnalysis[]>([]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const interactiveCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (videoFile) {
@@ -31,7 +51,7 @@ function RunningFormAnalysis({ videoFile }) {
     }
   }, [videoFile]);
 
-  const analyzeVideo = async () => {
+  const analyzeVideo = async (): Promise<void> => {
     setIsAnalyzing(true);
     setError('');
     setProgress(0);
@@ -43,12 +63,14 @@ function RunningFormAnalysis({ videoFile }) {
       setProgress(20);
 
       const video = videoRef.current;
+      if (!video) return;
+
       const videoUrl = URL.createObjectURL(videoFile);
 
       // Load video and wait for metadata
-      await new Promise((resolve, reject) => {
-        video.onloadedmetadata = resolve;
-        video.onerror = reject;
+      await new Promise<void>((resolve, reject) => {
+        video.onloadedmetadata = () => resolve();
+        video.onerror = () => reject(new Error('Failed to load video'));
         video.src = videoUrl;
       });
 
@@ -59,8 +81,8 @@ function RunningFormAnalysis({ videoFile }) {
 
       // Seek to middle of video and wait
       video.currentTime = video.duration / 2;
-      await new Promise((resolve) => {
-        video.onseeked = resolve;
+      await new Promise<void>((resolve) => {
+        video.onseeked = () => resolve();
       });
 
       setProgress(30);
@@ -68,14 +90,14 @@ function RunningFormAnalysis({ videoFile }) {
       // Analyze multiple frames for running gait
       const framesToAnalyze = 10; // More frames for gait cycle
       const interval = video.duration / (framesToAnalyze + 1);
-      const allAnalyses = [];
+      const allAnalyses: FrameAnalysis[] = [];
 
       for (let i = 1; i <= framesToAnalyze; i++) {
         const targetTime = i * interval;
 
         // Seek and wait for the frame to be ready
-        await new Promise((resolve) => {
-          video.onseeked = resolve;
+        await new Promise<void>((resolve) => {
+          video.onseeked = () => resolve();
           video.currentTime = targetTime;
         });
 
@@ -113,7 +135,7 @@ function RunningFormAnalysis({ videoFile }) {
         }
 
         // Create angle gauges
-        const gauges = [];
+        const gauges: AngleGauge[] = [];
         if (avgAnalysis.angles.bodyLean !== undefined) {
           gauges.push(createAngleGauge(avgAnalysis.angles.bodyLean, 5, 12, 'Body Lean'));
         }
@@ -148,13 +170,13 @@ function RunningFormAnalysis({ videoFile }) {
         setAllFramePoses(allAnalyses);
 
         // Create issue markers from critical/high severity recommendations
-        const markers = enhanced
+        const markers: IssueMarker[] = enhanced
           .filter(rec => rec.severity === 'critical' || rec.severity === 'moderate')
           .map((rec, index) => ({
             time: (index + 1) * interval, // Approximate time for each issue
             area: rec.area,
             message: rec.message,
-            severity: rec.severity,
+            severity: rec.severity!,
           }));
         setIssueMarkers(markers);
       } else {
@@ -171,7 +193,7 @@ function RunningFormAnalysis({ videoFile }) {
     }
   };
 
-  const combineAnalyses = (analyses) => {
+  const combineAnalyses = (analyses: RunningFormAnalysisType[]): RunningFormAnalysisType => {
     // Average angles
     const avgAngles = {
       bodyLean: 0,
@@ -180,34 +202,37 @@ function RunningFormAnalysis({ videoFile }) {
       armSwing: 0,
     };
 
-    let counts = { bodyLean: 0, kneeLift: 0, hipExtension: 0, armSwing: 0 };
+    const counts = { bodyLean: 0, kneeLift: 0, hipExtension: 0, armSwing: 0 };
 
     analyses.forEach(analysis => {
-      Object.keys(analysis.angles).forEach(key => {
+      (Object.keys(analysis.angles) as Array<keyof typeof avgAngles>).forEach(key => {
         if (analysis.angles[key]) {
-          avgAngles[key] += analysis.angles[key];
+          avgAngles[key] += analysis.angles[key]!;
           counts[key]++;
         }
       });
     });
 
-    Object.keys(avgAngles).forEach(key => {
+    (Object.keys(avgAngles) as Array<keyof typeof avgAngles>).forEach(key => {
       if (counts[key] > 0) {
         avgAngles[key] = Math.round(avgAngles[key] / counts[key]);
       }
     });
 
     // Use the last analysis as base and update with averaged angles
-    const combined = { ...analyses[analyses.length - 1] };
+    const combined: RunningFormAnalysisType = { ...analyses[analyses.length - 1] };
     combined.angles = avgAngles;
 
     return combined;
   };
 
-  const drawPoseOnCanvas = (analysis, pose) => {
+  const drawPoseOnCanvas = (analysis: RunningFormAnalysisType, pose: Pose): void => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
+    if (!canvas || !video) return;
+
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -222,13 +247,14 @@ function RunningFormAnalysis({ videoFile }) {
     drawRunningAngles(ctx, pose, analysis);
   };
 
-  const handleFrameChange = async (currentTime, showSkeleton, showAngles) => {
+  const handleFrameChange = async (currentTime: number, showSkeleton: boolean, showAngles: boolean): Promise<void> => {
     // Update the interactive canvas
     if (!videoRef.current || !interactiveCanvasRef.current) return;
 
     const video = videoRef.current;
     const canvas = interactiveCanvasRef.current;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     // Set canvas dimensions to match video (only on first draw or size change)
     if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
@@ -262,13 +288,13 @@ function RunningFormAnalysis({ videoFile }) {
           drawSkeleton(ctx, pose, canvas.width, canvas.height);
         }
         if (showAngles) {
-          drawRunningAngles(ctx, pose, analysis);
+          drawRunningAngles(ctx, pose, analysis as RunningFormAnalysisType);
         }
       }
     }
   };
 
-  const getStatusColor = (type) => {
+  const getStatusColor = (type: string): string => {
     switch (type) {
       case 'success': return '#4caf50';
       case 'warning': return '#ff9800';
@@ -277,10 +303,10 @@ function RunningFormAnalysis({ videoFile }) {
     }
   };
 
-  const getOverallMessage = (overall) => {
+  const getOverallMessage = (overall: string): OverallMessage => {
     switch (overall) {
       case 'excellent':
-        return { text: 'Excellent running form! 🏃', color: '#4caf50' };
+        return { text: 'Excellent running form!', color: '#4caf50' };
       case 'good':
         return { text: 'Good running form with minor improvements', color: '#2196f3' };
       case 'needs-improvement':

@@ -1,13 +1,14 @@
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
+import type { Pose, Keypoint, BikeFitAnalysis, Recommendation } from '../types';
 
-let detector = null;
+let detector: poseDetection.PoseDetector | null = null;
 
 // Initialize the pose detector
-export async function initializePoseDetector() {
+export async function initializePoseDetector(): Promise<poseDetection.PoseDetector> {
   if (detector) return detector;
 
-  const detectorConfig = {
+  const detectorConfig: poseDetection.MoveNetModelConfig = {
     modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
   };
 
@@ -20,17 +21,17 @@ export async function initializePoseDetector() {
 }
 
 // Get pose from video element
-export async function detectPose(videoElement) {
+export async function detectPose(videoElement: HTMLVideoElement): Promise<Pose | null> {
   if (!detector) {
     await initializePoseDetector();
   }
 
-  const poses = await detector.estimatePoses(videoElement);
-  return poses.length > 0 ? poses[0] : null;
+  const poses = await detector!.estimatePoses(videoElement);
+  return poses.length > 0 ? (poses[0] as Pose) : null;
 }
 
 // Calculate angle between three points
-export function calculateAngle(pointA, pointB, pointC) {
+export function calculateAngle(pointA: Keypoint, pointB: Keypoint, pointC: Keypoint): number {
   const radians = Math.atan2(pointC.y - pointB.y, pointC.x - pointB.x) -
                   Math.atan2(pointA.y - pointB.y, pointA.x - pointB.x);
   let angle = Math.abs(radians * 180.0 / Math.PI);
@@ -43,12 +44,12 @@ export function calculateAngle(pointA, pointB, pointC) {
 }
 
 // Get keypoint by name
-function getKeypoint(pose, name) {
-  return pose.keypoints.find(kp => kp.name === name);
+function getKeypoint(pose: Pose, name: string): Keypoint | undefined {
+  return pose.keypoints.find((kp) => kp.name === name);
 }
 
 // Analyze bike fit from pose
-export function analyzeBikeFit(pose) {
+export function analyzeBikeFit(pose: Pose): BikeFitAnalysis | null {
   if (!pose || !pose.keypoints) return null;
 
   const leftShoulder = getKeypoint(pose, 'left_shoulder');
@@ -74,15 +75,14 @@ export function analyzeBikeFit(pose) {
   const elbow = useLeftSide ? leftElbow : rightElbow;
   const wrist = useLeftSide ? leftWrist : rightWrist;
 
-  const results = {
-    side: useLeftSide ? 'left' : 'right',
+  const results: BikeFitAnalysis = {
     angles: {},
     recommendations: [],
-    confidence: pose.score || 0,
+    overall: 'good',
   };
 
   // Calculate knee angle (hip-knee-ankle)
-  if (hip && knee && ankle && hip.score > 0.3 && knee.score > 0.3 && ankle.score > 0.3) {
+  if (hip && knee && ankle && hip.score! > 0.3 && knee.score! > 0.3 && ankle.score! > 0.3) {
     const kneeAngle = calculateAngle(hip, knee, ankle);
     results.angles.knee = Math.round(kneeAngle);
 
@@ -113,7 +113,7 @@ export function analyzeBikeFit(pose) {
   }
 
   // Calculate hip angle (shoulder-hip-knee)
-  if (shoulder && hip && knee && shoulder.score > 0.3 && hip.score > 0.3 && knee.score > 0.3) {
+  if (shoulder && hip && knee && shoulder.score! > 0.3 && hip.score! > 0.3 && knee.score! > 0.3) {
     const hipAngle = calculateAngle(shoulder, hip, knee);
     results.angles.hip = Math.round(hipAngle);
 
@@ -136,9 +136,9 @@ export function analyzeBikeFit(pose) {
   }
 
   // Calculate back angle (vertical line-shoulder-hip)
-  if (shoulder && hip && shoulder.score > 0.3 && hip.score > 0.3) {
+  if (shoulder && hip && shoulder.score! > 0.3 && hip.score! > 0.3) {
     // Create a vertical reference point
-    const verticalPoint = { x: shoulder.x, y: shoulder.y - 100 };
+    const verticalPoint: Keypoint = { x: shoulder.x, y: shoulder.y - 100 };
     const backAngle = calculateAngle(verticalPoint, shoulder, hip);
     results.angles.back = Math.round(backAngle);
 
@@ -168,7 +168,7 @@ export function analyzeBikeFit(pose) {
   }
 
   // Calculate elbow angle (shoulder-elbow-wrist)
-  if (shoulder && elbow && wrist && shoulder.score > 0.3 && elbow.score > 0.3 && wrist.score > 0.3) {
+  if (shoulder && elbow && wrist && shoulder.score! > 0.3 && elbow.score! > 0.3 && wrist.score! > 0.3) {
     const elbowAngle = calculateAngle(shoulder, elbow, wrist);
     results.angles.elbow = Math.round(elbowAngle);
 
@@ -191,8 +191,8 @@ export function analyzeBikeFit(pose) {
   }
 
   // Overall assessment
-  const warningCount = results.recommendations.filter(r => r.type === 'warning').length;
-  const successCount = results.recommendations.filter(r => r.type === 'success').length;
+  const warningCount = results.recommendations.filter((r: Recommendation) => r.type === 'warning').length;
+  const successCount = results.recommendations.filter((r: Recommendation) => r.type === 'success').length;
 
   if (warningCount === 0 && successCount >= 2) {
     results.overall = 'excellent';

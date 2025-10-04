@@ -1,7 +1,8 @@
 import { initializePoseDetector, detectPose } from './poseDetection';
+import { Pose, Keypoint, SportType } from '../types';
 
 // Detect sport type from video
-export async function detectSportType(videoFile) {
+export async function detectSportType(videoFile: File): Promise<SportType | 'unknown'> {
   try {
     // Initialize pose detector
     await initializePoseDetector();
@@ -11,8 +12,8 @@ export async function detectSportType(videoFile) {
     const videoUrl = URL.createObjectURL(videoFile);
 
     // Load video
-    await new Promise((resolve, reject) => {
-      video.onloadedmetadata = resolve;
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
       video.onerror = reject;
       video.src = videoUrl;
     });
@@ -25,14 +26,14 @@ export async function detectSportType(videoFile) {
     // Analyze multiple frames to detect sport
     const framesToCheck = 5;
     const interval = video.duration / (framesToCheck + 1);
-    const detections = [];
+    const detections: Array<SportType | null> = [];
 
     for (let i = 1; i <= framesToCheck; i++) {
       const targetTime = i * interval;
 
       // Seek to frame
-      await new Promise((resolve) => {
-        video.onseeked = resolve;
+      await new Promise<void>((resolve) => {
+        video.onseeked = () => resolve();
         video.currentTime = targetTime;
       });
 
@@ -59,14 +60,16 @@ export async function detectSportType(videoFile) {
       return 'unknown';
     }
 
-    const sportCounts = detections.reduce((acc, sport) => {
-      acc[sport] = (acc[sport] || 0) + 1;
+    const sportCounts = detections.reduce<Record<string, number>>((acc, sport) => {
+      if (sport) {
+        acc[sport] = (acc[sport] || 0) + 1;
+      }
       return acc;
     }, {});
 
     const detectedSport = Object.keys(sportCounts).reduce((a, b) =>
       sportCounts[a] > sportCounts[b] ? a : b
-    );
+    ) as SportType;
 
     return detectedSport;
   } catch (error) {
@@ -76,10 +79,11 @@ export async function detectSportType(videoFile) {
 }
 
 // Classify sport based on pose
-function classifySport(pose) {
+function classifySport(pose: Pose): SportType | null {
   if (!pose || !pose.keypoints) return null;
 
-  const getKeypoint = (name) => pose.keypoints.find(kp => kp.name === name);
+  const getKeypoint = (name: string): Keypoint | undefined =>
+    pose.keypoints.find(kp => kp.name === name);
 
   const leftHip = getKeypoint('left_hip');
   const rightHip = getKeypoint('right_hip');
@@ -92,8 +96,8 @@ function classifySport(pose) {
 
   // Need minimum keypoints for classification
   if (!leftHip || !rightHip || !leftKnee || !rightKnee ||
-      leftHip.score < 0.2 || rightHip.score < 0.2 ||
-      leftKnee.score < 0.2 || rightKnee.score < 0.2) {
+      leftHip.score! < 0.2 || rightHip.score! < 0.2 ||
+      leftKnee.score! < 0.2 || rightKnee.score! < 0.2) {
     return null;
   }
 
@@ -102,10 +106,10 @@ function classifySport(pose) {
   const avgKneeY = (leftKnee.y + rightKnee.y) / 2;
   const avgHipX = (leftHip.x + rightHip.x) / 2;
 
-  let avgShoulderY = null;
-  let avgShoulderX = null;
+  let avgShoulderY: number | null = null;
+  let avgShoulderX: number | null = null;
   if (leftShoulder && rightShoulder &&
-      leftShoulder.score > 0.2 && rightShoulder.score > 0.2) {
+      leftShoulder.score! > 0.2 && rightShoulder.score! > 0.2) {
     avgShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
     avgShoulderX = (leftShoulder.x + rightShoulder.x) / 2;
   }
@@ -116,7 +120,7 @@ function classifySport(pose) {
   // Check leg position variations
   let ankleVariation = 0;
   let hasAnkles = false;
-  if (leftAnkle && rightAnkle && leftAnkle.score > 0.2 && rightAnkle.score > 0.2) {
+  if (leftAnkle && rightAnkle && leftAnkle.score! > 0.2 && rightAnkle.score! > 0.2) {
     ankleVariation = Math.abs(leftAnkle.y - rightAnkle.y);
     hasAnkles = true;
   }
@@ -126,7 +130,7 @@ function classifySport(pose) {
   // Body orientation analysis
   let bodyLeanForward = 0;
   let isVeryHorizontal = false;
-  if (avgShoulderY !== null) {
+  if (avgShoulderY !== null && avgShoulderX !== null) {
     // Vertical distance shoulder to hip
     const shoulderHipVertical = avgHipY - avgShoulderY;
     // Horizontal distance shoulder to hip

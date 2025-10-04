@@ -6,23 +6,43 @@ import { enhanceBikeFitRecommendations, getSeverityDisplay } from '../utils/enha
 import DetailedMetrics from './DetailedMetrics';
 import InteractiveVideo from './InteractiveVideo';
 import './BikeFitAnalysis.css';
+import type {
+  BikeFitAnalysis as BikeFitAnalysisType,
+  Pose,
+  AngleGauge,
+  DetailedMetrics as DetailedMetricsType,
+  Asymmetry,
+  FrameData,
+  Recommendation,
+  IssueMarker,
+  FrameAnalysis
+} from '../types';
 
-function BikeFitAnalysis({ videoFile }) {
-  const [analysis, setAnalysis] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState('');
-  const [lastPose, setLastPose] = useState(null);
-  const [angleGauges, setAngleGauges] = useState([]);
-  const [detailedMetrics, setDetailedMetrics] = useState(null);
-  const [asymmetry, setAsymmetry] = useState(null);
-  const [frameData, setFrameData] = useState([]);
-  const [enhancedRecs, setEnhancedRecs] = useState([]);
-  const [issueMarkers, setIssueMarkers] = useState([]);
-  const [allFramePoses, setAllFramePoses] = useState([]);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const interactiveCanvasRef = useRef(null);
+interface BikeFitAnalysisProps {
+  videoFile: File;
+}
+
+interface OverallMessage {
+  text: string;
+  color: string;
+}
+
+function BikeFitAnalysis({ videoFile }: BikeFitAnalysisProps) {
+  const [analysis, setAnalysis] = useState<BikeFitAnalysisType | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
+  const [error, setError] = useState<string>('');
+  const [lastPose, setLastPose] = useState<Pose | null>(null);
+  const [angleGauges, setAngleGauges] = useState<AngleGauge[]>([]);
+  const [detailedMetrics, setDetailedMetrics] = useState<DetailedMetricsType | null>(null);
+  const [asymmetry, setAsymmetry] = useState<Asymmetry | null>(null);
+  const [frameData, setFrameData] = useState<FrameData[]>([]);
+  const [enhancedRecs, setEnhancedRecs] = useState<Recommendation[]>([]);
+  const [issueMarkers, setIssueMarkers] = useState<IssueMarker[]>([]);
+  const [allFramePoses, setAllFramePoses] = useState<FrameAnalysis[]>([]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const interactiveCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (videoFile) {
@@ -30,7 +50,7 @@ function BikeFitAnalysis({ videoFile }) {
     }
   }, [videoFile]);
 
-  const analyzeVideo = async () => {
+  const analyzeVideo = async (): Promise<void> => {
     setIsAnalyzing(true);
     setError('');
     setProgress(0);
@@ -42,12 +62,14 @@ function BikeFitAnalysis({ videoFile }) {
       setProgress(20);
 
       const video = videoRef.current;
+      if (!video) return;
+
       const videoUrl = URL.createObjectURL(videoFile);
 
       // Load video and wait for metadata
-      await new Promise((resolve, reject) => {
-        video.onloadedmetadata = resolve;
-        video.onerror = reject;
+      await new Promise<void>((resolve, reject) => {
+        video.onloadedmetadata = () => resolve();
+        video.onerror = () => reject(new Error('Failed to load video'));
         video.src = videoUrl;
       });
 
@@ -58,8 +80,8 @@ function BikeFitAnalysis({ videoFile }) {
 
       // Seek to middle of video and wait
       video.currentTime = video.duration / 2;
-      await new Promise((resolve) => {
-        video.onseeked = resolve;
+      await new Promise<void>((resolve) => {
+        video.onseeked = () => resolve();
       });
 
       setProgress(30);
@@ -67,14 +89,14 @@ function BikeFitAnalysis({ videoFile }) {
       // Analyze multiple frames with better timing
       const framesToAnalyze = 8; // Reduced for better performance
       const interval = video.duration / (framesToAnalyze + 1);
-      const allAnalyses = [];
+      const allAnalyses: FrameAnalysis[] = [];
 
       for (let i = 1; i <= framesToAnalyze; i++) {
         const targetTime = i * interval;
 
         // Seek and wait for the frame to be ready
-        await new Promise((resolve) => {
-          video.onseeked = resolve;
+        await new Promise<void>((resolve) => {
+          video.onseeked = () => resolve();
           video.currentTime = targetTime;
         });
 
@@ -112,7 +134,7 @@ function BikeFitAnalysis({ videoFile }) {
         }
 
         // Create angle gauges
-        const gauges = [];
+        const gauges: AngleGauge[] = [];
         if (avgAnalysis.angles.knee) {
           gauges.push(createAngleGauge(avgAnalysis.angles.knee, 140, 160, 'Knee Angle'));
         }
@@ -144,13 +166,13 @@ function BikeFitAnalysis({ videoFile }) {
         setAllFramePoses(allAnalyses);
 
         // Create issue markers from critical/high severity recommendations
-        const markers = enhanced
+        const markers: IssueMarker[] = enhanced
           .filter(rec => rec.severity === 'critical' || rec.severity === 'moderate')
           .map((rec, index) => ({
             time: (index + 1) * interval, // Approximate time for each issue
             area: rec.area,
             message: rec.message,
-            severity: rec.severity,
+            severity: rec.severity!,
           }));
         setIssueMarkers(markers);
       } else {
@@ -167,7 +189,7 @@ function BikeFitAnalysis({ videoFile }) {
     }
   };
 
-  const combineAnalyses = (analyses) => {
+  const combineAnalyses = (analyses: BikeFitAnalysisType[]): BikeFitAnalysisType => {
     // Average angles
     const avgAngles = {
       knee: 0,
@@ -176,34 +198,37 @@ function BikeFitAnalysis({ videoFile }) {
       elbow: 0,
     };
 
-    let counts = { knee: 0, hip: 0, back: 0, elbow: 0 };
+    const counts = { knee: 0, hip: 0, back: 0, elbow: 0 };
 
     analyses.forEach(analysis => {
-      Object.keys(analysis.angles).forEach(key => {
+      (Object.keys(analysis.angles) as Array<keyof typeof avgAngles>).forEach(key => {
         if (analysis.angles[key]) {
-          avgAngles[key] += analysis.angles[key];
+          avgAngles[key] += analysis.angles[key]!;
           counts[key]++;
         }
       });
     });
 
-    Object.keys(avgAngles).forEach(key => {
+    (Object.keys(avgAngles) as Array<keyof typeof avgAngles>).forEach(key => {
       if (counts[key] > 0) {
         avgAngles[key] = Math.round(avgAngles[key] / counts[key]);
       }
     });
 
     // Use the last analysis as base and update with averaged angles
-    const combined = { ...analyses[analyses.length - 1] };
+    const combined: BikeFitAnalysisType = { ...analyses[analyses.length - 1] };
     combined.angles = avgAngles;
 
     return combined;
   };
 
-  const drawPoseOnCanvas = (analysis, pose) => {
+  const drawPoseOnCanvas = (analysis: BikeFitAnalysisType, pose: Pose): void => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
+    if (!canvas || !video) return;
+
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -218,13 +243,14 @@ function BikeFitAnalysis({ videoFile }) {
     drawBikeFitAngles(ctx, pose, analysis);
   };
 
-  const handleFrameChange = async (currentTime, showSkeleton, showAngles) => {
+  const handleFrameChange = async (currentTime: number, showSkeleton: boolean, showAngles: boolean): Promise<void> => {
     // Update the interactive canvas
     if (!videoRef.current || !interactiveCanvasRef.current) return;
 
     const video = videoRef.current;
     const canvas = interactiveCanvasRef.current;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     // Set canvas dimensions to match video (only on first draw or size change)
     if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
@@ -258,13 +284,13 @@ function BikeFitAnalysis({ videoFile }) {
           drawSkeleton(ctx, pose, canvas.width, canvas.height);
         }
         if (showAngles) {
-          drawBikeFitAngles(ctx, pose, analysis);
+          drawBikeFitAngles(ctx, pose, analysis as BikeFitAnalysisType);
         }
       }
     }
   };
 
-  const getStatusColor = (type) => {
+  const getStatusColor = (type: string): string => {
     switch (type) {
       case 'success': return '#4caf50';
       case 'warning': return '#ff9800';
@@ -273,10 +299,10 @@ function BikeFitAnalysis({ videoFile }) {
     }
   };
 
-  const getOverallMessage = (overall) => {
+  const getOverallMessage = (overall: string): OverallMessage => {
     switch (overall) {
       case 'excellent':
-        return { text: 'Excellent bike fit! 🎉', color: '#4caf50' };
+        return { text: 'Excellent bike fit!', color: '#4caf50' };
       case 'good':
         return { text: 'Good bike fit with minor adjustments needed', color: '#2196f3' };
       case 'needs-adjustment':

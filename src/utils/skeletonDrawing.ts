@@ -1,9 +1,16 @@
+import { Pose, Keypoint, BikeFitAnalysis, RunningFormAnalysis, AngleGauge } from '../types';
+
 // Draw skeleton overlay on canvas with pose keypoints and connections
-export function drawSkeleton(ctx, pose, videoWidth, videoHeight) {
+export function drawSkeleton(
+  ctx: CanvasRenderingContext2D,
+  pose: Pose,
+  videoWidth: number,
+  videoHeight: number
+): void {
   if (!pose || !pose.keypoints) return;
 
   // Define skeleton connections (pairs of keypoints to connect)
-  const connections = [
+  const connections: Array<[string, string]> = [
     // Torso
     ['left_shoulder', 'right_shoulder'],
     ['left_shoulder', 'left_hip'],
@@ -27,7 +34,8 @@ export function drawSkeleton(ctx, pose, videoWidth, videoHeight) {
     ['right_knee', 'right_ankle'],
   ];
 
-  const getKeypoint = (name) => pose.keypoints.find(kp => kp.name === name);
+  const getKeypoint = (name: string): Keypoint | undefined =>
+    pose.keypoints.find(kp => kp.name === name);
 
   // Draw connections (lines between keypoints)
   ctx.strokeStyle = '#00ff00';
@@ -37,7 +45,7 @@ export function drawSkeleton(ctx, pose, videoWidth, videoHeight) {
     const start = getKeypoint(startName);
     const end = getKeypoint(endName);
 
-    if (start && end && start.score > 0.3 && end.score > 0.3) {
+    if (start && end && start.score! > 0.3 && end.score! > 0.3) {
       ctx.beginPath();
       ctx.moveTo(start.x, start.y);
       ctx.lineTo(end.x, end.y);
@@ -47,7 +55,7 @@ export function drawSkeleton(ctx, pose, videoWidth, videoHeight) {
 
   // Draw keypoints (circles at joints)
   pose.keypoints.forEach(keypoint => {
-    if (keypoint.score > 0.3) {
+    if (keypoint.score! > 0.3) {
       ctx.beginPath();
       ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
       ctx.fillStyle = '#ff0000';
@@ -60,9 +68,16 @@ export function drawSkeleton(ctx, pose, videoWidth, videoHeight) {
 }
 
 // Draw angle measurement on body
-export function drawAngle(ctx, point1, point2, point3, angle, label) {
+export function drawAngle(
+  ctx: CanvasRenderingContext2D,
+  point1: Keypoint,
+  point2: Keypoint,
+  point3: Keypoint,
+  angle: number,
+  label: string
+): void {
   if (!point1 || !point2 || !point3 ||
-      point1.score < 0.3 || point2.score < 0.3 || point3.score < 0.3) {
+      point1.score! < 0.3 || point2.score! < 0.3 || point3.score! < 0.3) {
     return;
   }
 
@@ -92,10 +107,15 @@ export function drawAngle(ctx, point1, point2, point3, angle, label) {
 }
 
 // Draw all relevant angles for bike fit
-export function drawBikeFitAngles(ctx, pose, analysis) {
+export function drawBikeFitAngles(
+  ctx: CanvasRenderingContext2D,
+  pose: Pose,
+  analysis: BikeFitAnalysis & { side?: string }
+): void {
   if (!pose || !analysis) return;
 
-  const getKeypoint = (name) => pose.keypoints.find(kp => kp.name === name);
+  const getKeypoint = (name: string): Keypoint | undefined =>
+    pose.keypoints.find(kp => kp.name === name);
 
   // Use the side with better confidence
   const useLeftSide = analysis.side === 'left';
@@ -123,11 +143,27 @@ export function drawBikeFitAngles(ctx, pose, analysis) {
   }
 }
 
+interface RunningAnalysis extends RunningFormAnalysis {
+  sides?: {
+    left?: {
+      kneeAngle?: number;
+    };
+    right?: {
+      kneeAngle?: number;
+    };
+  };
+}
+
 // Draw all relevant angles for running form
-export function drawRunningAngles(ctx, pose, analysis) {
+export function drawRunningAngles(
+  ctx: CanvasRenderingContext2D,
+  pose: Pose,
+  analysis: RunningAnalysis
+): void {
   if (!pose || !analysis) return;
 
-  const getKeypoint = (name) => pose.keypoints.find(kp => kp.name === name);
+  const getKeypoint = (name: string): Keypoint | undefined =>
+    pose.keypoints.find(kp => kp.name === name);
 
   // Draw angles for both legs if available
   const leftShoulder = getKeypoint('left_shoulder');
@@ -164,11 +200,16 @@ export function drawRunningAngles(ctx, pose, analysis) {
 }
 
 // Create visual gauge showing angle within optimal range
-export function createAngleGauge(angle, minOptimal, maxOptimal, label) {
+export function createAngleGauge(
+  angle: number,
+  minOptimal: number,
+  maxOptimal: number,
+  label: string
+): AngleGauge {
   const percentage = ((angle - minOptimal) / (maxOptimal - minOptimal)) * 100;
   const clampedPercentage = Math.max(0, Math.min(100, percentage));
 
-  let status = 'warning';
+  let status: 'good' | 'warning' = 'warning';
   if (angle >= minOptimal && angle <= maxOptimal) {
     status = 'good';
   }

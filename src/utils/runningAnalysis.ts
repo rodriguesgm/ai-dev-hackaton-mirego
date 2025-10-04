@@ -1,12 +1,27 @@
 import { calculateAngle } from './poseDetection';
+import { Pose, Keypoint, RunningFormAnalysis, AngleData } from '../types';
+
+interface SideData {
+  kneeAngle?: number;
+  hipAngle?: number;
+  armAngle?: number;
+}
+
+interface RunningAnalysisResult extends RunningFormAnalysis {
+  confidence: number;
+  sides: {
+    left: SideData;
+    right: SideData;
+  };
+}
 
 // Get keypoint by name
-function getKeypoint(pose, name) {
+function getKeypoint(pose: Pose, name: string): Keypoint | undefined {
   return pose.keypoints.find(kp => kp.name === name);
 }
 
 // Analyze running form from pose
-export function analyzeRunningForm(pose) {
+export function analyzeRunningForm(pose: Pose): RunningAnalysisResult | null {
   if (!pose || !pose.keypoints) return null;
 
   const leftShoulder = getKeypoint(pose, 'left_shoulder');
@@ -23,10 +38,11 @@ export function analyzeRunningForm(pose) {
   const rightWrist = getKeypoint(pose, 'right_wrist');
 
   // Analyze both sides
-  const results = {
+  const results: RunningAnalysisResult = {
     angles: {},
     recommendations: [],
     confidence: pose.score || 0,
+    overall: 'good',
     sides: {
       left: {},
       right: {}
@@ -35,10 +51,10 @@ export function analyzeRunningForm(pose) {
 
   // Analyze Left Side
   if (leftShoulder && leftHip && leftKnee &&
-      leftShoulder.score > 0.3 && leftHip.score > 0.3 && leftKnee.score > 0.3) {
+      leftShoulder.score! > 0.3 && leftHip.score! > 0.3 && leftKnee.score! > 0.3) {
 
     // Left knee angle (hip-knee-ankle)
-    if (leftAnkle && leftAnkle.score > 0.3) {
+    if (leftAnkle && leftAnkle.score! > 0.3) {
       const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
       results.sides.left.kneeAngle = Math.round(leftKneeAngle);
     }
@@ -50,10 +66,10 @@ export function analyzeRunningForm(pose) {
 
   // Analyze Right Side
   if (rightShoulder && rightHip && rightKnee &&
-      rightShoulder.score > 0.3 && rightHip.score > 0.3 && rightKnee.score > 0.3) {
+      rightShoulder.score! > 0.3 && rightHip.score! > 0.3 && rightKnee.score! > 0.3) {
 
     // Right knee angle (hip-knee-ankle)
-    if (rightAnkle && rightAnkle.score > 0.3) {
+    if (rightAnkle && rightAnkle.score! > 0.3) {
       const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
       results.sides.right.kneeAngle = Math.round(rightKneeAngle);
     }
@@ -65,21 +81,21 @@ export function analyzeRunningForm(pose) {
 
   // Analyze Posture (body lean)
   if (leftShoulder && rightShoulder && leftHip && rightHip &&
-      leftShoulder.score > 0.3 && rightShoulder.score > 0.3 &&
-      leftHip.score > 0.3 && rightHip.score > 0.3) {
+      leftShoulder.score! > 0.3 && rightShoulder.score! > 0.3 &&
+      leftHip.score! > 0.3 && rightHip.score! > 0.3) {
 
     // Average shoulder and hip positions
-    const avgShoulder = {
+    const avgShoulder: Keypoint = {
       x: (leftShoulder.x + rightShoulder.x) / 2,
       y: (leftShoulder.y + rightShoulder.y) / 2
     };
-    const avgHip = {
+    const avgHip: Keypoint = {
       x: (leftHip.x + rightHip.x) / 2,
       y: (leftHip.y + rightHip.y) / 2
     };
 
     // Calculate body lean from vertical
-    const verticalPoint = { x: avgShoulder.x, y: avgShoulder.y - 100 };
+    const verticalPoint: Keypoint = { x: avgShoulder.x, y: avgShoulder.y - 100 };
     const bodyLean = calculateAngle(verticalPoint, avgShoulder, avgHip);
     results.angles.bodyLean = Math.round(bodyLean);
 
@@ -109,7 +125,7 @@ export function analyzeRunningForm(pose) {
   }
 
   // Analyze Knee Lift (average both legs)
-  const kneeAngles = [];
+  const kneeAngles: number[] = [];
   if (results.sides.left.kneeAngle) kneeAngles.push(results.sides.left.kneeAngle);
   if (results.sides.right.kneeAngle) kneeAngles.push(results.sides.right.kneeAngle);
 
@@ -136,7 +152,7 @@ export function analyzeRunningForm(pose) {
   }
 
   // Analyze Hip Extension
-  const hipAngles = [];
+  const hipAngles: number[] = [];
   if (results.sides.left.hipAngle) hipAngles.push(results.sides.left.hipAngle);
   if (results.sides.right.hipAngle) hipAngles.push(results.sides.right.hipAngle);
 
@@ -167,7 +183,7 @@ export function analyzeRunningForm(pose) {
 
   // Check left arm
   if (leftShoulder && leftElbow && leftWrist &&
-      leftShoulder.score > 0.3 && leftElbow.score > 0.3 && leftWrist.score > 0.3) {
+      leftShoulder.score! > 0.3 && leftElbow.score! > 0.3 && leftWrist.score! > 0.3) {
     const leftArmAngle = calculateAngle(leftShoulder, leftElbow, leftWrist);
     results.sides.left.armAngle = Math.round(leftArmAngle);
     armSwingAnalyzed = true;
@@ -175,14 +191,14 @@ export function analyzeRunningForm(pose) {
 
   // Check right arm
   if (rightShoulder && rightElbow && rightWrist &&
-      rightShoulder.score > 0.3 && rightElbow.score > 0.3 && rightWrist.score > 0.3) {
+      rightShoulder.score! > 0.3 && rightElbow.score! > 0.3 && rightWrist.score! > 0.3) {
     const rightArmAngle = calculateAngle(rightShoulder, rightElbow, rightWrist);
     results.sides.right.armAngle = Math.round(rightArmAngle);
     armSwingAnalyzed = true;
   }
 
   if (armSwingAnalyzed) {
-    const armAngles = [];
+    const armAngles: number[] = [];
     if (results.sides.left.armAngle) armAngles.push(results.sides.left.armAngle);
     if (results.sides.right.armAngle) armAngles.push(results.sides.right.armAngle);
 
@@ -217,7 +233,7 @@ export function analyzeRunningForm(pose) {
   }
 
   // Analyze Foot Strike (based on ankle position relative to knee)
-  if (leftKnee && leftAnkle && leftKnee.score > 0.3 && leftAnkle.score > 0.3) {
+  if (leftKnee && leftAnkle && leftKnee.score! > 0.3 && leftAnkle.score! > 0.3) {
     const footStrikeOffset = leftAnkle.x - leftKnee.x;
 
     if (Math.abs(footStrikeOffset) < 30) {

@@ -1,7 +1,14 @@
 import './DetailedMetrics.css';
 import { getConsistencyRating, getAsymmetryStatus } from '../utils/detailedMetrics';
+import type { DetailedMetrics as DetailedMetricsType, Asymmetry, FrameData } from '../types';
 
-function DetailedMetrics({ metrics, asymmetry, frameData }) {
+interface DetailedMetricsProps {
+  metrics: DetailedMetricsType | null;
+  asymmetry: Asymmetry | null;
+  frameData: FrameData[];
+}
+
+function DetailedMetrics({ metrics, asymmetry, frameData }: DetailedMetricsProps) {
   if (!metrics) return null;
 
   return (
@@ -138,8 +145,8 @@ function DetailedMetrics({ metrics, asymmetry, frameData }) {
   );
 }
 
-function formatAngleName(key) {
-  const nameMap = {
+function formatAngleName(key: string): string {
+  const nameMap: { [key: string]: string } = {
     knee: 'Knee',
     hip: 'Hip',
     elbow: 'Elbow',

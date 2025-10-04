@@ -1,18 +1,40 @@
+import {
+  MetricData,
+  DetailedMetrics,
+  AsymmetryData,
+  Asymmetry,
+  FrameData,
+  ConsistencyRating,
+  AsymmetryStatus,
+  BikeFitAnalysis,
+  RunningFormAnalysis
+} from '../types';
+
+interface AnalysisWithAngles {
+  angles?: Record<string, number>;
+  sides?: {
+    left?: Record<string, number>;
+    right?: Record<string, number>;
+  };
+}
+
 // Calculate detailed metrics from all analyzed frames
-export function calculateDetailedMetrics(allAnalyses) {
+export function calculateDetailedMetrics(
+  allAnalyses: AnalysisWithAngles[]
+): DetailedMetrics | null {
   if (!allAnalyses || allAnalyses.length === 0) return null;
 
-  const angleKeys = new Set();
+  const angleKeys = new Set<string>();
   allAnalyses.forEach(analysis => {
     Object.keys(analysis.angles || {}).forEach(key => angleKeys.add(key));
   });
 
-  const metrics = {};
+  const metrics: DetailedMetrics = {};
 
   angleKeys.forEach(angleKey => {
     const values = allAnalyses
       .map(a => a.angles?.[angleKey])
-      .filter(v => v !== undefined && v !== null && !isNaN(v));
+      .filter((v): v is number => v !== undefined && v !== null && !isNaN(v));
 
     if (values.length > 0) {
       const min = Math.min(...values);
@@ -37,7 +59,7 @@ export function calculateDetailedMetrics(allAnalyses) {
 }
 
 // Calculate consistency score (0-100)
-function calculateConsistency(stdDev, avg) {
+function calculateConsistency(stdDev: number, avg: number): number {
   if (avg === 0) return 0;
 
   // Lower coefficient of variation = higher consistency
@@ -61,11 +83,13 @@ function calculateConsistency(stdDev, avg) {
 }
 
 // Calculate left vs right asymmetry for running/cycling
-export function calculateAsymmetry(allAnalyses) {
+export function calculateAsymmetry(
+  allAnalyses: AnalysisWithAngles[]
+): Asymmetry | null {
   if (!allAnalyses || allAnalyses.length === 0) return null;
 
-  const leftAngles = {};
-  const rightAngles = {};
+  const leftAngles: Record<string, number[]> = {};
+  const rightAngles: Record<string, number[]> = {};
 
   allAnalyses.forEach(analysis => {
     if (analysis.sides) {
@@ -91,7 +115,7 @@ export function calculateAsymmetry(allAnalyses) {
     }
   });
 
-  const asymmetry = {};
+  const asymmetry: Asymmetry = {};
 
   Object.keys(leftAngles).forEach(key => {
     if (rightAngles[key]) {
@@ -114,7 +138,7 @@ export function calculateAsymmetry(allAnalyses) {
 }
 
 // Get consistency rating
-export function getConsistencyRating(score) {
+export function getConsistencyRating(score: number): ConsistencyRating {
   if (score >= 90) return { label: 'Excellent', color: '#4caf50' };
   if (score >= 75) return { label: 'Good', color: '#8bc34a' };
   if (score >= 60) return { label: 'Fair', color: '#ff9800' };
@@ -122,7 +146,7 @@ export function getConsistencyRating(score) {
 }
 
 // Get asymmetry status
-export function getAsymmetryStatus(status) {
+export function getAsymmetryStatus(status: 'balanced' | 'minor' | 'significant'): AsymmetryStatus {
   switch (status) {
     case 'balanced':
       return { label: 'Balanced', color: '#4caf50', icon: '✓' };
@@ -136,7 +160,7 @@ export function getAsymmetryStatus(status) {
 }
 
 // Create frame-by-frame data for charting
-export function createFrameData(allAnalyses) {
+export function createFrameData(allAnalyses: AnalysisWithAngles[]): FrameData[] {
   return allAnalyses.map((analysis, index) => ({
     frame: index + 1,
     ...analysis.angles,

@@ -1,3 +1,5 @@
+import { SeverityLevel, SeverityDisplay, BikeFitAnalysis, RunningFormAnalysis, Recommendation } from '../types';
+
 /**
  * Enhanced Recommendations System
  * - Severity scoring (critical, moderate, minor)
@@ -6,14 +8,19 @@
  */
 
 // Severity levels
-export const SEVERITY = {
+export const SEVERITY: Record<string, SeverityLevel> = {
   CRITICAL: 'critical',
   MODERATE: 'moderate',
   MINOR: 'minor',
 };
 
+interface ExerciseData {
+  drills: string[];
+  videoTimestamp: boolean;
+}
+
 // Exercise database
-const EXERCISES = {
+const EXERCISES: Record<string, ExerciseData> = {
   // Bike fit exercises
   kneeTooLow: {
     drills: [
@@ -140,24 +147,30 @@ const EXERCISES = {
 
 /**
  * Calculate severity based on deviation from optimal range
- * @param {number} value - Current measured value
- * @param {number} optimalMin - Minimum optimal value
- * @param {number} optimalMax - Maximum optimal value
- * @param {number} criticalThreshold - % deviation for critical severity
- * @param {number} moderateThreshold - % deviation for moderate severity
- * @returns {string} Severity level
+ * @param value - Current measured value
+ * @param optimalMin - Minimum optimal value
+ * @param optimalMax - Maximum optimal value
+ * @param criticalThreshold - % deviation for critical severity
+ * @param moderateThreshold - % deviation for moderate severity
+ * @returns Severity level
  */
-export function calculateSeverity(value, optimalMin, optimalMax, criticalThreshold = 20, moderateThreshold = 10) {
+export function calculateSeverity(
+  value: number,
+  optimalMin: number,
+  optimalMax: number,
+  criticalThreshold: number = 20,
+  moderateThreshold: number = 10
+): SeverityLevel {
   const optimalMid = (optimalMin + optimalMax) / 2;
   const optimalRange = optimalMax - optimalMin;
 
   // Value is within optimal range
   if (value >= optimalMin && value <= optimalMax) {
-    return SEVERITY.MINOR;
+    return SEVERITY.MINOR as SeverityLevel;
   }
 
   // Calculate deviation percentage
-  let deviation;
+  let deviation: number;
   if (value < optimalMin) {
     deviation = ((optimalMin - value) / optimalRange) * 100;
   } else {
@@ -165,29 +178,29 @@ export function calculateSeverity(value, optimalMin, optimalMax, criticalThresho
   }
 
   if (deviation >= criticalThreshold) {
-    return SEVERITY.CRITICAL;
+    return SEVERITY.CRITICAL as SeverityLevel;
   } else if (deviation >= moderateThreshold) {
-    return SEVERITY.MODERATE;
+    return SEVERITY.MODERATE as SeverityLevel;
   } else {
-    return SEVERITY.MINOR;
+    return SEVERITY.MINOR as SeverityLevel;
   }
 }
 
 /**
  * Enhance bike fit recommendations with severity and exercises
- * @param {object} analysis - Bike fit analysis result
- * @returns {array} Enhanced recommendations sorted by severity
+ * @param analysis - Bike fit analysis result
+ * @returns Enhanced recommendations sorted by severity
  */
-export function enhanceBikeFitRecommendations(analysis) {
+export function enhanceBikeFitRecommendations(analysis: BikeFitAnalysis): Recommendation[] {
   if (!analysis || !analysis.recommendations) return [];
 
   const enhanced = analysis.recommendations.map(rec => {
-    let severity = SEVERITY.MINOR;
-    let exerciseKey = null;
+    let severity: SeverityLevel = SEVERITY.MINOR as SeverityLevel;
+    let exerciseKey: string | null = null;
     let impact = '';
 
     // Knee angle analysis
-    if (rec.area === 'Knee Angle') {
+    if (rec.area === 'Knee Angle' && rec.angle !== undefined) {
       const angle = rec.angle;
       severity = calculateSeverity(angle, 140, 160, 25, 15);
 
@@ -205,7 +218,7 @@ export function enhanceBikeFitRecommendations(analysis) {
     }
 
     // Hip angle analysis
-    if (rec.area === 'Hip Angle') {
+    if (rec.area === 'Hip Angle' && rec.angle !== undefined) {
       const angle = rec.angle;
       severity = calculateSeverity(angle, 40, 70, 30, 20);
 
@@ -223,7 +236,7 @@ export function enhanceBikeFitRecommendations(analysis) {
     }
 
     // Elbow angle analysis
-    if (rec.area === 'Elbow Angle') {
+    if (rec.area === 'Elbow Angle' && rec.angle !== undefined) {
       const angle = rec.angle;
       severity = calculateSeverity(angle, 140, 170, 25, 15);
 
@@ -241,7 +254,7 @@ export function enhanceBikeFitRecommendations(analysis) {
     }
 
     // Back angle analysis
-    if (rec.area === 'Back Angle') {
+    if (rec.area === 'Back Angle' && rec.angle !== undefined) {
       const angle = rec.angle;
       severity = calculateSeverity(angle, 35, 50, 30, 20);
 
@@ -270,24 +283,24 @@ export function enhanceBikeFitRecommendations(analysis) {
   });
 
   // Sort by severity (critical first)
-  return enhanced.sort((a, b) => b.priorityScore - a.priorityScore);
+  return enhanced.sort((a, b) => (b.priorityScore || 0) - (a.priorityScore || 0));
 }
 
 /**
  * Enhance running form recommendations with severity and exercises
- * @param {object} analysis - Running form analysis result
- * @returns {array} Enhanced recommendations sorted by severity
+ * @param analysis - Running form analysis result
+ * @returns Enhanced recommendations sorted by severity
  */
-export function enhanceRunningRecommendations(analysis) {
+export function enhanceRunningRecommendations(analysis: RunningFormAnalysis): Recommendation[] {
   if (!analysis || !analysis.recommendations) return [];
 
   const enhanced = analysis.recommendations.map(rec => {
-    let severity = SEVERITY.MINOR;
-    let exerciseKey = null;
+    let severity: SeverityLevel = SEVERITY.MINOR as SeverityLevel;
+    let exerciseKey: string | null = null;
     let impact = '';
 
     // Body lean analysis
-    if (rec.area === 'Body Lean') {
+    if (rec.area === 'Body Lean' && rec.angle !== undefined) {
       const angle = rec.angle;
       severity = calculateSeverity(angle, 5, 12, 40, 25);
 
@@ -305,7 +318,7 @@ export function enhanceRunningRecommendations(analysis) {
     }
 
     // Knee lift analysis
-    if (rec.area === 'Knee Lift') {
+    if (rec.area === 'Knee Lift' && rec.angle !== undefined) {
       const angle = rec.angle;
       severity = calculateSeverity(angle, 100, 140, 30, 20);
 
@@ -323,7 +336,7 @@ export function enhanceRunningRecommendations(analysis) {
     }
 
     // Hip extension analysis
-    if (rec.area === 'Hip Extension') {
+    if (rec.area === 'Hip Extension' && rec.angle !== undefined) {
       const angle = rec.angle;
       severity = calculateSeverity(angle, 160, 180, 15, 10);
 
@@ -336,7 +349,7 @@ export function enhanceRunningRecommendations(analysis) {
     }
 
     // Arm swing analysis
-    if (rec.area === 'Arm Swing') {
+    if (rec.area === 'Arm Swing' && rec.angle !== undefined) {
       const angle = rec.angle;
       severity = calculateSeverity(angle, 80, 110, 30, 20);
 
@@ -360,13 +373,13 @@ export function enhanceRunningRecommendations(analysis) {
   });
 
   // Sort by severity (critical first)
-  return enhanced.sort((a, b) => b.priorityScore - a.priorityScore);
+  return enhanced.sort((a, b) => (b.priorityScore || 0) - (a.priorityScore || 0));
 }
 
 /**
  * Convert severity to numeric score for sorting
  */
-function getSeverityScore(severity) {
+function getSeverityScore(severity: SeverityLevel): number {
   switch (severity) {
     case SEVERITY.CRITICAL:
       return 3;
@@ -382,7 +395,7 @@ function getSeverityScore(severity) {
 /**
  * Get severity display properties
  */
-export function getSeverityDisplay(severity) {
+export function getSeverityDisplay(severity: SeverityLevel): SeverityDisplay {
   switch (severity) {
     case SEVERITY.CRITICAL:
       return {
