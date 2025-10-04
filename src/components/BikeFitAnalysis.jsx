@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { initializePoseDetector, detectPose, analyzeBikeFit } from '../utils/poseDetection';
 import { drawSkeleton, drawBikeFitAngles, createAngleGauge } from '../utils/skeletonDrawing';
+import { calculateDetailedMetrics, calculateAsymmetry, createFrameData } from '../utils/detailedMetrics';
+import DetailedMetrics from './DetailedMetrics';
 import './BikeFitAnalysis.css';
 
 function BikeFitAnalysis({ videoFile }) {
@@ -10,6 +12,9 @@ function BikeFitAnalysis({ videoFile }) {
   const [error, setError] = useState('');
   const [lastPose, setLastPose] = useState(null);
   const [angleGauges, setAngleGauges] = useState([]);
+  const [detailedMetrics, setDetailedMetrics] = useState(null);
+  const [asymmetry, setAsymmetry] = useState(null);
+  const [frameData, setFrameData] = useState([]);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -112,6 +117,18 @@ function BikeFitAnalysis({ videoFile }) {
           gauges.push(createAngleGauge(avgAnalysis.angles.elbow, 140, 170, 'Elbow Angle'));
         }
         setAngleGauges(gauges);
+
+        // Calculate detailed metrics
+        const metrics = calculateDetailedMetrics(analyses);
+        setDetailedMetrics(metrics);
+
+        // Calculate asymmetry (if sides data available)
+        const asymData = calculateAsymmetry(analyses);
+        setAsymmetry(asymData);
+
+        // Create frame data for charts
+        const frames = createFrameData(analyses);
+        setFrameData(frames);
       } else {
         setError('Could not detect rider in video. Please ensure the full body is visible from the side.');
       }
@@ -313,6 +330,12 @@ function BikeFitAnalysis({ videoFile }) {
               </div>
             </div>
           )}
+
+          <DetailedMetrics
+            metrics={detailedMetrics}
+            asymmetry={asymmetry}
+            frameData={frameData}
+          />
 
           <div className="analysis-note">
             <p><strong>Note:</strong> This is an automated analysis. For professional bike fitting, consult a certified bike fitter.</p>

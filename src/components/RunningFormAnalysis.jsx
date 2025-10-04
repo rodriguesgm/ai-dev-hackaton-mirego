@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { initializePoseDetector, detectPose } from '../utils/poseDetection';
 import { analyzeRunningForm } from '../utils/runningAnalysis';
 import { drawSkeleton, drawRunningAngles, createAngleGauge } from '../utils/skeletonDrawing';
+import { calculateDetailedMetrics, calculateAsymmetry, createFrameData } from '../utils/detailedMetrics';
+import DetailedMetrics from './DetailedMetrics';
 import './RunningFormAnalysis.css';
 
 function RunningFormAnalysis({ videoFile }) {
@@ -11,6 +13,9 @@ function RunningFormAnalysis({ videoFile }) {
   const [error, setError] = useState('');
   const [lastPose, setLastPose] = useState(null);
   const [angleGauges, setAngleGauges] = useState([]);
+  const [detailedMetrics, setDetailedMetrics] = useState(null);
+  const [asymmetry, setAsymmetry] = useState(null);
+  const [frameData, setFrameData] = useState([]);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -116,6 +121,18 @@ function RunningFormAnalysis({ videoFile }) {
           gauges.push(createAngleGauge(avgAnalysis.angles.armSwing, 80, 110, 'Arm Swing'));
         }
         setAngleGauges(gauges);
+
+        // Calculate detailed metrics
+        const metrics = calculateDetailedMetrics(analyses);
+        setDetailedMetrics(metrics);
+
+        // Calculate asymmetry (left vs right)
+        const asymData = calculateAsymmetry(analyses);
+        setAsymmetry(asymData);
+
+        // Create frame data for charts
+        const frames = createFrameData(analyses);
+        setFrameData(frames);
       } else {
         setError('Could not detect runner in video. Please ensure the full body is visible from the side.');
       }
@@ -317,6 +334,12 @@ function RunningFormAnalysis({ videoFile }) {
               </div>
             </div>
           )}
+
+          <DetailedMetrics
+            metrics={detailedMetrics}
+            asymmetry={asymmetry}
+            frameData={frameData}
+          />
 
           <div className="analysis-note">
             <p><strong>Note:</strong> This is an automated analysis based on video snapshots. For comprehensive gait analysis, consult a running coach or sports medicine professional.</p>
