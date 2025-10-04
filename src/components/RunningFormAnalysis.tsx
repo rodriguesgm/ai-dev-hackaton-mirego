@@ -9,6 +9,7 @@ import {
   getRunningFormOverallMessage,
   drawPoseOnCanvas
 } from '../utils/analysisHelpers';
+import { generateDetailedSummary } from '../utils/analysisSummary';
 import { useVideoAnalysis } from '../hooks/useVideoAnalysis';
 import { useFrameRenderer } from '../hooks/useFrameRenderer';
 import AnalysisResults from './AnalysisResults';
@@ -22,6 +23,7 @@ import type {
   FrameData,
   Recommendation,
   IssueMarker,
+  AnalysisSummary,
 } from '../types';
 
 interface RunningFormAnalysisProps {
@@ -35,6 +37,7 @@ function RunningFormAnalysis({ videoFile }: RunningFormAnalysisProps) {
   const [frameData, setFrameData] = useState<FrameData[]>([]);
   const [enhancedRecs, setEnhancedRecs] = useState<Recommendation[]>([]);
   const [issueMarkers, setIssueMarkers] = useState<IssueMarker[]>([]);
+  const [summary, setSummary] = useState<AnalysisSummary | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const interactiveCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -71,13 +74,26 @@ function RunningFormAnalysis({ videoFile }: RunningFormAnalysisProps) {
 
       // Calculate metrics
       const analyses = allAnalyses.map(a => a.analysis as RunningFormAnalysisType);
-      setDetailedMetrics(calculateDetailedMetrics(analyses));
-      setAsymmetry(calculateAsymmetry(analyses));
+      const metrics = calculateDetailedMetrics(analyses);
+      const asymmetryData = calculateAsymmetry(analyses);
+      setDetailedMetrics(metrics);
+      setAsymmetry(asymmetryData);
       setFrameData(createFrameData(analyses));
 
       // Enhance recommendations
       const enhanced = enhanceRunningRecommendations(avgAnalysis);
       setEnhancedRecs(enhanced);
+
+      // Generate detailed summary
+      const summaryData = generateDetailedSummary(
+        enhanced,
+        avgAnalysis.angles,
+        metrics,
+        asymmetryData,
+        avgAnalysis.overall,
+        'running'
+      );
+      setSummary(summaryData);
 
       // Create issue markers
       const duration = videoRef.current?.duration || 0;
@@ -119,7 +135,7 @@ function RunningFormAnalysis({ videoFile }: RunningFormAnalysisProps) {
 
       {error && <div className="analysis-error">{error}</div>}
 
-      {analysis && !isAnalyzing && (
+      {analysis && !isAnalyzing && summary && (
         <AnalysisResults
           overallMessage={getRunningFormOverallMessage(analysis.overall)}
           angles={analysis.angles}
@@ -128,6 +144,7 @@ function RunningFormAnalysis({ videoFile }: RunningFormAnalysisProps) {
           detailedMetrics={detailedMetrics}
           asymmetry={asymmetry}
           frameData={frameData}
+          summary={summary}
           videoFile={videoFile}
           issueMarkers={issueMarkers}
           canvasRef={interactiveCanvasRef}

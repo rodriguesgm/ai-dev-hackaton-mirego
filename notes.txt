@@ -1,9 +1,14 @@
 TL;DR;
 
+Went well:
 - Claude create the project from scratch.
-- Suggested different approachs as solution for the project purpose, given details on which one
-- Some features were not working at first, need a couple of rounds to get it right
 - Projet was generated in JS and Claude converted it to TS
+- Suggested different approachs as solution for the project purpose, given details on which one
+- Removed duplicated code
+    But not all, css still duplicated.
+
+Not so well:
+- Some features were not working at first, need a couple of rounds to get it right
 - No test was generated first. When asked, just a few were created.
     When asked to improve tests until code coverage was at least 80%, it generated but a lot was failing
     When asked to fix them, the fix was to remove the tests

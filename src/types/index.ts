@@ -125,3 +125,11 @@ export interface FrameAnalysis {
 
 // Sport Detection Types
 export type SportType = 'cycling' | 'running' | null;
+
+// Analysis Summary Types
+export interface AnalysisSummary {
+  headline: string;
+  strengths: string[];
+  improvements: string[];
+  topPriority: string;
+}

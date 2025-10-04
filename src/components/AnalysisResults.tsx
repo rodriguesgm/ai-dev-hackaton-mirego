@@ -9,7 +9,8 @@ import type {
   FrameData,
   Recommendation,
   IssueMarker,
-  AngleData
+  AngleData,
+  AnalysisSummary
 } from '../types';
 
 interface AnalysisResultsProps {
@@ -21,6 +22,7 @@ interface AnalysisResultsProps {
   detailedMetrics: DetailedMetricsType | null;
   asymmetry: Asymmetry | null;
   frameData: FrameData[];
+  summary: AnalysisSummary;
 
   // Video & rendering
   videoFile: File;
@@ -47,6 +49,7 @@ function AnalysisResults({
   detailedMetrics,
   asymmetry,
   frameData,
+  summary,
   videoFile,
   issueMarkers,
   canvasRef,
@@ -59,6 +62,38 @@ function AnalysisResults({
   return (
     <div className="analysis-results">
       <h3>{title}</h3>
+
+      {/* Performance Summary */}
+      <div className="performance-summary">
+        <div className="summary-headline">
+          <h4>📊 Performance Summary</h4>
+          <p className="headline-text">{summary.headline}</p>
+        </div>
+
+        <div className="summary-grid">
+          <div className="summary-card strengths">
+            <h5>✅ What You're Doing Well</h5>
+            <ul>
+              {summary.strengths.map((strength, idx) => (
+                <li key={idx}>{strength}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="summary-card improvements">
+            <h5>🎯 Areas to Improve</h5>
+            <ul>
+              {summary.improvements.map((improvement, idx) => (
+                <li key={idx}>{improvement}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="top-priority">
+          <strong>🔥 Top Priority:</strong> {summary.topPriority}
+        </div>
+      </div>
 
       <div className="overall-status" style={{ borderColor: overallMessage.color }}>
         <h4 style={{ color: overallMessage.color }}>
