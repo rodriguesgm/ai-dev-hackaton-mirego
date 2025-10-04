@@ -1,0 +1,65 @@
+
+
+- Created an app from scratch 
+- Added functionality for bike fit
+    - Suggested 3 approach highlighting benefits from each one
+        - 1 using tensor flow on frontend
+        - 1 using a backend that would connect to an api
+        - An hybrid mode that I don’t remember
+    - It tried to implement using a free api but not found so went with option 1
+    - It had some issues to analyse the video and display the result
+        - 2 or 3 iterations and it fixed the issue
+        - Improved the loading state while analyzing 
+- Added a second funcionallity for running form
+    - Only asked to add a new empty button
+    - It refactor the code to make it generic
+    - It changed some labels on the app like “bit fit analysis” to “sport performance analysis”
+- Added feature to auto detect sport
+    - Always detecting running as cycling
+    - After 2 rounds of trying to fix it fixed
+        - Although the code generated was funny
+- Asked on how we could improve results and reports
+
+ 1. Visual Enhancements
+
+  - Skeleton overlay on video - Draw pose keypoints and connections on the video frame
+  - Angle visualization - Show angle measurements directly on the body
+  - Side-by-side comparison - Before/after or left/right leg comparison
+  - Progress indicators - Visual gauges showing how close to optimal ranges
+
+  2. Detailed Metrics
+
+  - Min/Max/Average angles - Show range across all analyzed frames
+  - Frame-by-frame breakdown - Chart showing angle changes over time
+  - Consistency score - How stable the form is throughout the video
+  - Left vs Right comparison - Detect asymmetries in running/cycling
+
+  3. Better Recommendations
+
+  - Prioritized action items - Rank recommendations by importance
+  - Drill suggestions - Specific exercises to improve weak areas
+  - Video timestamps - Link issues to specific moments in the video
+  - Severity levels - Critical/Warning/Info with color coding (already have this)
+
+  4. Export/Share Features (skipped)
+
+  - Download PDF report - Professional formatted analysis
+  - Share link - Generate shareable URL
+  - Compare multiple videos - Track progress over time
+  - Screenshot with annotations - Save marked-up frame
+
+  5. Enhanced Data
+
+  - Cadence detection - Steps/pedal RPM per minute
+  - Power zones estimation - Based on body position
+  - Injury risk assessment - Highlight dangerous patterns
+  - Optimal range indicators - Show target zones with color bands
+
+  6. Interactive Features
+
+  - Scrub through video - See angles change as you move slider
+  - Toggle overlays - Show/hide different metrics
+  - Video playback with highlights - Play video with issues marked
+  - 3D pose visualization - Rotate view of detected pose
+
+
