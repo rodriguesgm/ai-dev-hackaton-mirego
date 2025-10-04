@@ -1,8 +1,8 @@
-# Video Upload App
+# Sports Performance Analysis
 
 ## About
 
-This is a video upload and analysis application that allows users to record or upload videos for posture and movement analysis. The app was **completely generated with Claude AI** just for fun and experimentation.
+This is an app where you can upload video to be analysed and it'll give you insights about your posture and movement for Running or Cycling. The app was **completely generated with Claude AI** just for fun and experimentation.
 
 ### Demo
 
