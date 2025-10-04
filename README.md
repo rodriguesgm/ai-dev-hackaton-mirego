@@ -61,9 +61,38 @@ Test coverage reports will be generated in the `coverage/` directory.
 - @testing-library/react - React component testing
 - jsdom - DOM environment for tests
 
-**Video Processing:**
-- MediaRecorder API - Video recording
-- Canvas API - Video frame analysis
+**Video Analysis & AI:**
+- **TensorFlow.js** - Machine learning library for JavaScript
+- **@tensorflow-models/pose-detection** - Pose estimation models
+- **MoveNet** - Lightweight pose detection model for real-time analysis
+- **Canvas API** - Frame extraction and skeleton visualization
+- **MediaRecorder API** - Video recording capabilities
+
+**Analysis Process:**
+1. **Frame Sampling**: Extracts 24 frames evenly distributed across the video
+2. **Pose Detection**: Uses MoveNet to detect 17 body keypoints per frame
+3. **Angle Calculation**: Computes joint angles (knee, hip, elbow, back, etc.)
+4. **Metrics Analysis**: Calculates consistency, asymmetry, and frame-by-frame variations
+5. **Sport-Specific Evaluation**: Compares measurements against optimal ranges for cycling or running
+
+**Generated Reports:**
+- **Performance Summary**: Personalized overview with specific measurements
+  - What you're doing well (strengths with exact angles)
+  - Areas to improve (specific issues with measurements)
+  - Top priority action item with recommended drills
+- **Detailed Metrics**: Statistical analysis of all angles
+  - Min/Max/Average values
+  - Consistency percentages
+  - Range variations
+- **Asymmetry Analysis**: Left vs. right balance comparison
+  - Percentage differences
+  - Visual balance indicators
+  - Status classification (balanced/minor/significant)
+- **Visual Analysis**: Skeleton overlay with angle markers
+- **Interactive Timeline**: Frame-by-frame video scrubbing with issue markers
+- **Prioritized Recommendations**: Severity-based suggestions (critical/moderate/minor)
+  - Specific impacts on performance
+  - Actionable drills and exercises
 
 ### Project Structure
 - `/src/components` - React components
