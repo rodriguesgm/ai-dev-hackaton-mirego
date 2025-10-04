@@ -16,8 +16,6 @@ Not so well:
     can easily get lost and be confused in the code
  
 
-
-
 Detailed
 
 
@@ -85,4 +83,10 @@ Detailed
 - Asked to convert project to TS
 - Asked to generate test and add code coverage
     - first generated just some times
-    - asked to keep generating until code coverage is at least 80%
+    - Asked to keep generating until code coverage is at least 80%
+    - It generated but lot of tests were failing
+    - Asking to fix the failing tests, most of the fix were removing the test or changing it to test less stuff
+- Asked for more improviments on some reports  
+    - Suggested some more changes and created all the new enhancements but it was not using it, so added files for nothing
+    - Asked to use the new enhancements genereated but the app crached and it was not able to fix it
+    - After some rounds, the code was kind of hard to know what was being used, what not, so just rollbacked everything

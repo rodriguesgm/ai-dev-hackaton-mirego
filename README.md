@@ -4,6 +4,8 @@
 
 This is an app where you can upload video to be analysed and it'll give you insights about your posture and movement for Running or Cycling. The app was **completely generated with Claude AI** just for fun and experimentation.
 
+For development notes about this experience with Claude, see [notes.txt](./notes.txt).
+
 ### Demo
 
 [Watch Demo Video](./demo.mov)
