@@ -140,13 +140,29 @@
   border-radius: 8px;
   border-left: 4px solid;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.recommendation-card.enhanced {
+  padding: 20px;
+}
+
+.recommendation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .rec-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.rec-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .rec-area {
@@ -164,11 +180,60 @@
   color: #555;
 }
 
+.severity-badge {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .rec-message {
-  margin: 0;
-  color: #666;
+  margin: 0 0 10px 0;
+  color: #333;
   font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.rec-impact {
+  margin: 10px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  color: #555;
+  font-size: 0.85rem;
   line-height: 1.5;
+}
+
+.rec-impact strong {
+  color: #333;
+}
+
+.rec-drills {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.rec-drills strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.rec-drills ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.rec-drills li {
+  color: #555;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-bottom: 6px;
 }
 
 .skeleton-visualization {

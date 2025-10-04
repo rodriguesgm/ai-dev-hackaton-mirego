@@ -3,6 +3,7 @@ import { initializePoseDetector, detectPose } from '../utils/poseDetection';
 import { analyzeRunningForm } from '../utils/runningAnalysis';
 import { drawSkeleton, drawRunningAngles, createAngleGauge } from '../utils/skeletonDrawing';
 import { calculateDetailedMetrics, calculateAsymmetry, createFrameData } from '../utils/detailedMetrics';
+import { enhanceRunningRecommendations, getSeverityDisplay } from '../utils/enhancedRecommendations';
 import DetailedMetrics from './DetailedMetrics';
 import './RunningFormAnalysis.css';
 
@@ -16,6 +17,7 @@ function RunningFormAnalysis({ videoFile }) {
   const [detailedMetrics, setDetailedMetrics] = useState(null);
   const [asymmetry, setAsymmetry] = useState(null);
   const [frameData, setFrameData] = useState([]);
+  const [enhancedRecs, setEnhancedRecs] = useState([]);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -133,6 +135,10 @@ function RunningFormAnalysis({ videoFile }) {
         // Create frame data for charts
         const frames = createFrameData(analyses);
         setFrameData(frames);
+
+        // Enhance recommendations with severity and drills
+        const enhanced = enhanceRunningRecommendations(avgAnalysis);
+        setEnhancedRecs(enhanced);
       } else {
         setError('Could not detect runner in video. Please ensure the full body is visible from the side.');
       }
@@ -314,23 +320,55 @@ function RunningFormAnalysis({ videoFile }) {
             </div>
           </div>
 
-          {analysis.recommendations && analysis.recommendations.length > 0 && (
+          {enhancedRecs && enhancedRecs.length > 0 && (
             <div className="recommendations-section">
               <h4>Recommendations</h4>
               <div className="recommendations-list">
-                {analysis.recommendations.map((rec, index) => (
-                  <div
-                    key={index}
-                    className="recommendation-card"
-                    style={{ borderLeftColor: getStatusColor(rec.type) }}
-                  >
-                    <div className="rec-header">
-                      <span className="rec-area">{rec.area}</span>
-                      {rec.angle && <span className="rec-angle">{rec.angle}°</span>}
+                {enhancedRecs.map((rec, index) => {
+                  const severityInfo = getSeverityDisplay(rec.severity);
+                  return (
+                    <div
+                      key={index}
+                      className="recommendation-card enhanced"
+                      style={{
+                        borderLeftColor: severityInfo.color,
+                        backgroundColor: severityInfo.bgColor,
+                      }}
+                    >
+                      <div className="rec-header">
+                        <div className="rec-header-left">
+                          <span className="rec-area">{rec.area}</span>
+                          {rec.angle && <span className="rec-angle">{rec.angle}°</span>}
+                        </div>
+                        <span
+                          className="severity-badge"
+                          style={{
+                            backgroundColor: severityInfo.color,
+                            color: 'white',
+                          }}
+                        >
+                          {severityInfo.icon} {severityInfo.label}
+                        </span>
+                      </div>
+                      <p className="rec-message">{rec.message}</p>
+                      {rec.impact && (
+                        <p className="rec-impact">
+                          <strong>Impact:</strong> {rec.impact}
+                        </p>
+                      )}
+                      {rec.drills && rec.drills.length > 0 && (
+                        <div className="rec-drills">
+                          <strong>Recommended Drills:</strong>
+                          <ul>
+                            {rec.drills.map((drill, idx) => (
+                              <li key={idx}>{drill}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
-                    <p className="rec-message">{rec.message}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
