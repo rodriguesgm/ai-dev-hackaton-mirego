@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './App.css';
 import BikeFitAnalysis from './components/BikeFitAnalysis';
+import RunningFormAnalysis from './components/RunningFormAnalysis';
 
 function App() {
   const [video, setVideo] = useState(null);
@@ -141,11 +142,7 @@ function App() {
 
           {analysisType === 'bike' && <BikeFitAnalysis videoFile={video} />}
 
-          {analysisType === 'running' && (
-            <div className="coming-soon">
-              <p>🏃 Running form analysis coming soon!</p>
-            </div>
-          )}
+          {analysisType === 'running' && <RunningFormAnalysis videoFile={video} />}
         </div>
       </div>
     </div>
