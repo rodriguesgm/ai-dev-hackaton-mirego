@@ -1,0 +1,347 @@
+.interactive-video {
+  margin: 25px 0;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Video Container */
+.video-container {
+  position: relative;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.video-player {
+  width: 100%;
+  display: block;
+  max-height: 500px;
+  object-fit: contain;
+}
+
+.video-canvas {
+  width: 100%;
+  display: block;
+  max-height: 500px;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Overlay Toggles */
+.overlay-toggles {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.toggle-btn {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: translateY(-2px);
+}
+
+.toggle-btn.active {
+  background: rgba(102, 126, 234, 0.9);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Video Controls */
+.video-controls {
+  padding: 15px 0;
+}
+
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.control-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.control-btn:active {
+  transform: translateY(0);
+}
+
+.play-btn {
+  padding: 12px 20px;
+  font-size: 1.4rem;
+}
+
+.time-display {
+  margin-left: auto;
+  color: #555;
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+}
+
+/* Timeline */
+.timeline-container {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.timeline {
+  position: relative;
+  height: 10px;
+  background: #e0e0e0;
+  border-radius: 5px;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.timeline:hover {
+  height: 12px;
+}
+
+.timeline-progress {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 5px;
+  transition: width 0.1s linear;
+}
+
+.timeline-scrubber {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: white;
+  border: 3px solid #667eea;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: left 0.1s linear;
+  cursor: grab;
+}
+
+.timeline-scrubber:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Issue Markers */
+.issue-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 5;
+  transition: all 0.2s ease;
+}
+
+.issue-marker:hover {
+  transform: translate(-50%, -50%) scale(1.5);
+  z-index: 15;
+}
+
+.issue-marker.critical {
+  background: #f44336;
+  box-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
+}
+
+.issue-marker.moderate {
+  background: #ff9800;
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.6);
+}
+
+.issue-marker.minor {
+  background: #2196f3;
+  box-shadow: 0 0 8px rgba(33, 150, 243, 0.6);
+}
+
+/* Marker Tooltip */
+.marker-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.marker-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.marker-tooltip strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+.marker-tooltip p {
+  margin: 0;
+  color: #ddd;
+}
+
+.issue-marker:hover .marker-tooltip {
+  display: block;
+}
+
+/* Issue List */
+.issue-list {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.issue-list h5 {
+  color: #333;
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+.issue-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.issue-item {
+  display: grid;
+  grid-template-columns: 60px 120px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.issue-item:hover {
+  background: #e3f2fd;
+  transform: translateX(4px);
+}
+
+.issue-item.critical {
+  border-left-color: #f44336;
+}
+
+.issue-item.moderate {
+  border-left-color: #ff9800;
+}
+
+.issue-item.minor {
+  border-left-color: #2196f3;
+}
+
+.issue-time {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #667eea;
+  font-size: 0.85rem;
+}
+
+.issue-area {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.85rem;
+}
+
+.issue-desc {
+  color: #666;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .overlay-toggles {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .toggle-btn {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+
+  .control-buttons {
+    flex-wrap: wrap;
+  }
+
+  .control-btn {
+    padding: 8px 12px;
+    font-size: 1rem;
+  }
+
+  .play-btn {
+    padding: 10px 16px;
+    font-size: 1.2rem;
+  }
+
+  .time-display {
+    flex-basis: 100%;
+    text-align: center;
+    margin: 8px 0 0 0;
+  }
+
+  .issue-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .issue-time {
+    font-size: 0.9rem;
+  }
+
+  .issue-desc {
+    white-space: normal;
+  }
+}

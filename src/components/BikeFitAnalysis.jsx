@@ -4,6 +4,7 @@ import { drawSkeleton, drawBikeFitAngles, createAngleGauge } from '../utils/skel
 import { calculateDetailedMetrics, calculateAsymmetry, createFrameData } from '../utils/detailedMetrics';
 import { enhanceBikeFitRecommendations, getSeverityDisplay } from '../utils/enhancedRecommendations';
 import DetailedMetrics from './DetailedMetrics';
+import InteractiveVideo from './InteractiveVideo';
 import './BikeFitAnalysis.css';
 
 function BikeFitAnalysis({ videoFile }) {
@@ -17,8 +18,11 @@ function BikeFitAnalysis({ videoFile }) {
   const [asymmetry, setAsymmetry] = useState(null);
   const [frameData, setFrameData] = useState([]);
   const [enhancedRecs, setEnhancedRecs] = useState([]);
+  const [issueMarkers, setIssueMarkers] = useState([]);
+  const [allFramePoses, setAllFramePoses] = useState([]);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const interactiveCanvasRef = useRef(null);
 
   useEffect(() => {
     if (videoFile) {
@@ -135,6 +139,20 @@ function BikeFitAnalysis({ videoFile }) {
         // Enhance recommendations with severity and drills
         const enhanced = enhanceBikeFitRecommendations(avgAnalysis);
         setEnhancedRecs(enhanced);
+
+        // Store frame poses for interactive playback
+        setAllFramePoses(allAnalyses);
+
+        // Create issue markers from critical/high severity recommendations
+        const markers = enhanced
+          .filter(rec => rec.severity === 'critical' || rec.severity === 'moderate')
+          .map((rec, index) => ({
+            time: (index + 1) * interval, // Approximate time for each issue
+            area: rec.area,
+            message: rec.message,
+            severity: rec.severity,
+          }));
+        setIssueMarkers(markers);
       } else {
         setError('Could not detect rider in video. Please ensure the full body is visible from the side.');
       }
@@ -200,6 +218,52 @@ function BikeFitAnalysis({ videoFile }) {
     drawBikeFitAngles(ctx, pose, analysis);
   };
 
+  const handleFrameChange = async (currentTime, showSkeleton, showAngles) => {
+    // Update the interactive canvas
+    if (!videoRef.current || !interactiveCanvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = interactiveCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas dimensions to match video (only on first draw or size change)
+    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+    }
+
+    // Clear canvas first
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Always draw the current video frame
+    try {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    } catch (error) {
+      console.error('Error drawing video frame:', error);
+      return;
+    }
+
+    // Draw overlays if we have analyzed pose data
+    if (allFramePoses.length > 0) {
+      const frameIndex = Math.min(
+        Math.floor((currentTime / video.duration) * allFramePoses.length),
+        allFramePoses.length - 1
+      );
+
+      if (allFramePoses[frameIndex]) {
+        const { analysis, pose } = allFramePoses[frameIndex];
+
+        // Draw overlays based on toggles
+        if (showSkeleton) {
+          drawSkeleton(ctx, pose, canvas.width, canvas.height);
+        }
+        if (showAngles) {
+          drawBikeFitAngles(ctx, pose, analysis);
+        }
+      }
+    }
+  };
+
   const getStatusColor = (type) => {
     switch (type) {
       case 'success': return '#4caf50';
@@ -249,6 +313,17 @@ function BikeFitAnalysis({ videoFile }) {
               {getOverallMessage(analysis.overall).text}
             </h4>
           </div>
+
+          {/* Interactive Video Player */}
+          <InteractiveVideo
+            videoFile={videoFile}
+            onFrameChange={handleFrameChange}
+            issueMarkers={issueMarkers}
+            showSkeleton={true}
+            showAngles={true}
+            canvasRef={interactiveCanvasRef}
+            videoRef={videoRef}
+          />
 
           {lastPose && canvasRef.current && (
             <div className="skeleton-visualization">
