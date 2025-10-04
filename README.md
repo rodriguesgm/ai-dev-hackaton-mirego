@@ -1,16 +1,66 @@
-# React + Vite
+# Video Upload App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## About
 
-Currently, two official plugins are available:
+This is a video upload and analysis application that allows users to record or upload videos for posture and movement analysis. The app was **completely generated with Claude AI** just for fun and experimentation.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**⚠️ IMPORTANT DISCLAIMER:** This application has NOT been validated by health professionals. It is a proof-of-concept project and should NOT be used for actual medical or health assessments.
 
-## React Compiler
+## How to Run
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
 
-## Expanding the ESLint configuration
+### Installation & Startup
+```bash
+# Install dependencies
+npm install
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Start the development server
+npm run dev
+```
+
+The application will be available at `http://localhost:5173` (or another port if 5173 is in use).
+
+## How to Test
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+Test coverage reports will be generated in the `coverage/` directory.
+
+## Development
+
+### Tech Stack
+
+**Frontend:**
+- React 18 - UI framework
+- TypeScript - Type-safe JavaScript
+- Vite - Build tool and dev server
+- TailwindCSS - Utility-first CSS framework
+
+**Testing:**
+- Vitest - Test runner
+- @testing-library/react - React component testing
+- jsdom - DOM environment for tests
+
+**Video Processing:**
+- MediaRecorder API - Video recording
+- Canvas API - Video frame analysis
+
+### Project Structure
+- `/src/components` - React components
+- `/src/__tests__` - Test files
+- `/src/App.tsx` - Main application component
+
+### Development Server
+The project uses Vite with Hot Module Replacement (HMR) for fast refresh during development.
