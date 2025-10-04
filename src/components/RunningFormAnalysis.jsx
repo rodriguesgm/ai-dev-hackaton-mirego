@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { initializePoseDetector, detectPose } from '../utils/poseDetection';
 import { analyzeRunningForm } from '../utils/runningAnalysis';
+import { drawSkeleton, drawRunningAngles, createAngleGauge } from '../utils/skeletonDrawing';
 import './RunningFormAnalysis.css';
 
 function RunningFormAnalysis({ videoFile }) {
@@ -8,6 +9,8 @@ function RunningFormAnalysis({ videoFile }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  const [lastPose, setLastPose] = useState(null);
+  const [angleGauges, setAngleGauges] = useState([]);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -73,7 +76,7 @@ function RunningFormAnalysis({ videoFile }) {
           if (pose && pose.score > 0.3) {
             const runningAnalysis = analyzeRunningForm(pose);
             if (runningAnalysis) {
-              allAnalyses.push(runningAnalysis);
+              allAnalyses.push({ analysis: runningAnalysis, pose });
             }
           }
         } catch (frameError) {
@@ -85,13 +88,34 @@ function RunningFormAnalysis({ videoFile }) {
 
       // Average the results
       if (allAnalyses.length > 0) {
-        const avgAnalysis = combineAnalyses(allAnalyses);
+        const analyses = allAnalyses.map(a => a.analysis);
+        const avgAnalysis = combineAnalyses(analyses);
         setAnalysis(avgAnalysis);
 
-        // Draw skeleton on last frame
+        // Store last pose for skeleton drawing
+        const lastFrame = allAnalyses[allAnalyses.length - 1];
+        setLastPose(lastFrame.pose);
+
+        // Draw skeleton on canvas
         if (canvasRef.current && videoRef.current) {
-          drawPoseOnCanvas(allAnalyses[allAnalyses.length - 1]);
+          drawPoseOnCanvas(lastFrame.analysis, lastFrame.pose);
         }
+
+        // Create angle gauges
+        const gauges = [];
+        if (avgAnalysis.angles.bodyLean !== undefined) {
+          gauges.push(createAngleGauge(avgAnalysis.angles.bodyLean, 5, 12, 'Body Lean'));
+        }
+        if (avgAnalysis.angles.kneeLift !== undefined) {
+          gauges.push(createAngleGauge(avgAnalysis.angles.kneeLift, 100, 140, 'Knee Lift'));
+        }
+        if (avgAnalysis.angles.hipExtension !== undefined) {
+          gauges.push(createAngleGauge(avgAnalysis.angles.hipExtension, 160, 180, 'Hip Extension'));
+        }
+        if (avgAnalysis.angles.armSwing !== undefined) {
+          gauges.push(createAngleGauge(avgAnalysis.angles.armSwing, 80, 110, 'Arm Swing'));
+        }
+        setAngleGauges(gauges);
       } else {
         setError('Could not detect runner in video. Please ensure the full body is visible from the side.');
       }
@@ -139,7 +163,7 @@ function RunningFormAnalysis({ videoFile }) {
     return combined;
   };
 
-  const drawPoseOnCanvas = (analysis) => {
+  const drawPoseOnCanvas = (analysis, pose) => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
     const ctx = canvas.getContext('2d');
@@ -149,6 +173,12 @@ function RunningFormAnalysis({ videoFile }) {
 
     // Draw video frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Draw skeleton overlay
+    drawSkeleton(ctx, pose, canvas.width, canvas.height);
+
+    // Draw angle measurements
+    drawRunningAngles(ctx, pose, analysis);
   };
 
   const getStatusColor = (type) => {
@@ -200,6 +230,42 @@ function RunningFormAnalysis({ videoFile }) {
               {getOverallMessage(analysis.overall).text}
             </h4>
           </div>
+
+          {lastPose && canvasRef.current && (
+            <div className="skeleton-visualization">
+              <h4>Visual Analysis</h4>
+              <div className="skeleton-image">
+                <img
+                  src={canvasRef.current.toDataURL()}
+                  alt="Pose analysis with skeleton overlay"
+                  style={{ width: '100%', borderRadius: '8px' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {angleGauges.length > 0 && (
+            <div className="angle-gauges-section">
+              <h4>Angle Ranges</h4>
+              <div className="gauges-grid">
+                {angleGauges.map((gauge, index) => (
+                  <div key={index} className="gauge-card">
+                    <div className="gauge-label">{gauge.label}</div>
+                    <div className="gauge-value">{gauge.angle}°</div>
+                    <div className="gauge-bar">
+                      <div
+                        className={`gauge-fill ${gauge.status}`}
+                        style={{ width: `${gauge.percentage}%` }}
+                      ></div>
+                    </div>
+                    <div className="gauge-range">
+                      {gauge.minOptimal}° - {gauge.maxOptimal}°
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="angles-section">
             <h4>Measured Metrics</h4>

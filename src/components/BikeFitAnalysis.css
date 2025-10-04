@@ -171,6 +171,93 @@
   line-height: 1.5;
 }
 
+.skeleton-visualization {
+  margin-bottom: 25px;
+}
+
+.skeleton-visualization h4 {
+  color: #555;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.skeleton-image {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.skeleton-image img {
+  display: block;
+  width: 100%;
+}
+
+.angle-gauges-section {
+  margin-bottom: 25px;
+}
+
+.angle-gauges-section h4 {
+  color: #555;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.gauges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.gauge-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gauge-label {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.gauge-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.gauge-bar {
+  height: 12px;
+  background: #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.gauge-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 6px;
+}
+
+.gauge-fill.good {
+  background: linear-gradient(90deg, #4caf50 0%, #81c784 100%);
+}
+
+.gauge-fill.warning {
+  background: linear-gradient(90deg, #ff9800 0%, #ffb74d 100%);
+}
+
+.gauge-range {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+}
+
 .analysis-note {
   margin-top: 25px;
   padding: 15px;
