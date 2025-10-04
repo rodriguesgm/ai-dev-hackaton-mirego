@@ -1,5 +1,34 @@
 import { Pose, Keypoint, BikeFitAnalysis, RunningFormAnalysis, AngleGauge } from '../types';
 
+// Linear interpolation between two numbers
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+// Interpolate between two keypoints
+export function interpolateKeypoint(kp1: Keypoint, kp2: Keypoint, t: number): Keypoint {
+  return {
+    ...kp1,
+    x: lerp(kp1.x, kp2.x, t),
+    y: lerp(kp1.y, kp2.y, t),
+    score: Math.max(kp1.score || 0, kp2.score || 0), // Use best confidence
+  };
+}
+
+// Interpolate between two poses
+export function interpolatePose(pose1: Pose, pose2: Pose, t: number): Pose {
+  const interpolatedKeypoints = pose1.keypoints.map((kp1, index) => {
+    const kp2 = pose2.keypoints[index];
+    return interpolateKeypoint(kp1, kp2, t);
+  });
+
+  return {
+    ...pose1,
+    keypoints: interpolatedKeypoints,
+    score: Math.max(pose1.score, pose2.score),
+  };
+}
+
 // Draw skeleton overlay on canvas with pose keypoints and connections
 export function drawSkeleton(
   ctx: CanvasRenderingContext2D,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { initializePoseDetector, detectPose } from '../utils/poseDetection';
 import { analyzeRunningForm } from '../utils/runningAnalysis';
-import { drawSkeleton, drawRunningAngles, createAngleGauge } from '../utils/skeletonDrawing';
+import { drawSkeleton, drawRunningAngles, createAngleGauge, interpolatePose } from '../utils/skeletonDrawing';
 import { calculateDetailedMetrics, calculateAsymmetry, createFrameData } from '../utils/detailedMetrics';
 import { enhanceRunningRecommendations, getSeverityDisplay } from '../utils/enhancedRecommendations';
 import DetailedMetrics from './DetailedMetrics';
@@ -88,7 +88,7 @@ function RunningFormAnalysis({ videoFile }: RunningFormAnalysisProps) {
       setProgress(30);
 
       // Analyze multiple frames for running gait
-      const framesToAnalyze = 10; // More frames for gait cycle
+      const framesToAnalyze = 24; // Increased for smoother skeleton overlay
       const interval = video.duration / (framesToAnalyze + 1);
       const allAnalyses: FrameAnalysis[] = [];
 
@@ -273,22 +273,49 @@ function RunningFormAnalysis({ videoFile }: RunningFormAnalysisProps) {
       return;
     }
 
-    // Draw overlays if we have analyzed pose data
+    // Enhanced skeleton overlay with interpolation and real-time detection
     if (allFramePoses.length > 0) {
-      const frameIndex = Math.min(
-        Math.floor((currentTime / video.duration) * allFramePoses.length),
-        allFramePoses.length - 1
-      );
+      const progress = currentTime / video.duration;
+      const framePosition = progress * allFramePoses.length;
+      const frameIndex = Math.floor(framePosition);
+      const nextFrameIndex = Math.min(frameIndex + 1, allFramePoses.length - 1);
+      const interpolationFactor = framePosition - frameIndex;
 
-      if (allFramePoses[frameIndex]) {
-        const { analysis, pose } = allFramePoses[frameIndex];
+      // Try real-time pose detection for smoother results
+      let currentPose: Pose | null = null;
+      let currentAnalysis: RunningFormAnalysisType | null = null;
 
-        // Draw overlays based on toggles
-        if (showSkeleton) {
-          drawSkeleton(ctx, pose, canvas.width, canvas.height);
+      try {
+        // Real-time detection (non-blocking, will use cached if too slow)
+        const detectedPose = await Promise.race([
+          detectPose(video),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 50)) // 50ms timeout
+        ]);
+
+        if (detectedPose && detectedPose.score > 0.3) {
+          currentPose = detectedPose;
+          currentAnalysis = analyzeRunningForm(detectedPose);
         }
-        if (showAngles) {
-          drawRunningAngles(ctx, pose, analysis as RunningFormAnalysisType);
+      } catch (error) {
+        // Fall back to cached poses on error
+        console.debug('Real-time detection skipped, using cached poses');
+      }
+
+      // Fallback to interpolated poses if real-time detection failed
+      if (!currentPose && allFramePoses[frameIndex] && allFramePoses[nextFrameIndex]) {
+        const pose1 = allFramePoses[frameIndex].pose;
+        const pose2 = allFramePoses[nextFrameIndex].pose;
+        currentPose = interpolatePose(pose1, pose2, interpolationFactor);
+        currentAnalysis = allFramePoses[frameIndex].analysis as RunningFormAnalysisType;
+      }
+
+      // Draw overlays based on toggles
+      if (currentPose) {
+        if (showSkeleton) {
+          drawSkeleton(ctx, currentPose, canvas.width, canvas.height);
+        }
+        if (showAngles && currentAnalysis) {
+          drawRunningAngles(ctx, currentPose, currentAnalysis);
         }
       }
     }
